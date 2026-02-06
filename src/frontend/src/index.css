@@ -1,0 +1,459 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Neon Cyberpunk Color System - OKLCH */
+    --background: oklch(0.12 0.02 270);
+    --foreground: oklch(0.98 0.01 270);
+
+    --card: oklch(0.15 0.03 270);
+    --card-foreground: oklch(0.98 0.01 270);
+
+    --popover: oklch(0.15 0.03 270);
+    --popover-foreground: oklch(0.98 0.01 270);
+
+    --primary: oklch(0.65 0.25 280);
+    --primary-foreground: oklch(0.98 0.01 270);
+
+    --secondary: oklch(0.25 0.05 270);
+    --secondary-foreground: oklch(0.98 0.01 270);
+
+    --muted: oklch(0.25 0.05 270);
+    --muted-foreground: oklch(0.65 0.05 270);
+
+    --accent: oklch(0.65 0.25 200);
+    --accent-foreground: oklch(0.98 0.01 270);
+
+    --destructive: oklch(0.55 0.25 25);
+    --destructive-foreground: oklch(0.98 0.01 270);
+
+    --border: oklch(0.35 0.15 280);
+    --input: oklch(0.35 0.15 280);
+    --ring: oklch(0.65 0.25 280);
+
+    --radius: 0.5rem;
+
+    /* Neon Colors */
+    --neon-purple: oklch(0.65 0.25 280);
+    --neon-cyan: oklch(0.75 0.15 200);
+    --neon-pink: oklch(0.70 0.25 340);
+    --neon-blue: oklch(0.60 0.20 240);
+    --neon-magenta: oklch(0.68 0.28 320);
+    --neon-violet: oklch(0.62 0.26 300);
+  }
+
+  .dark {
+    --background: oklch(0.12 0.02 270);
+    --foreground: oklch(0.98 0.01 270);
+
+    --card: oklch(0.15 0.03 270);
+    --card-foreground: oklch(0.98 0.01 270);
+
+    --popover: oklch(0.15 0.03 270);
+    --popover-foreground: oklch(0.98 0.01 270);
+
+    --primary: oklch(0.65 0.25 280);
+    --primary-foreground: oklch(0.98 0.01 270);
+
+    --secondary: oklch(0.25 0.05 270);
+    --secondary-foreground: oklch(0.98 0.01 270);
+
+    --muted: oklch(0.25 0.05 270);
+    --muted-foreground: oklch(0.65 0.05 270);
+
+    --accent: oklch(0.65 0.25 200);
+    --accent-foreground: oklch(0.98 0.01 270);
+
+    --destructive: oklch(0.55 0.25 25);
+    --destructive-foreground: oklch(0.98 0.01 270);
+
+    --border: oklch(0.35 0.15 280);
+    --input: oklch(0.35 0.15 280);
+    --ring: oklch(0.65 0.25 280);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Neon Glow Utilities */
+.text-neon-purple {
+  color: var(--neon-purple);
+}
+
+.text-neon-cyan {
+  color: var(--neon-cyan);
+}
+
+.text-neon-pink {
+  color: var(--neon-pink);
+}
+
+.text-neon-blue {
+  color: var(--neon-blue);
+}
+
+.text-neon-magenta {
+  color: var(--neon-magenta);
+}
+
+.text-neon-violet {
+  color: var(--neon-violet);
+}
+
+.border-neon-purple {
+  border-color: var(--neon-purple);
+}
+
+.border-neon-cyan {
+  border-color: var(--neon-cyan);
+}
+
+.bg-neon-purple {
+  background-color: var(--neon-purple);
+}
+
+.bg-neon-cyan {
+  background-color: var(--neon-cyan);
+}
+
+/* Enhanced Audio-Reactive Animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.7;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes ripple-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 30px 15px rgba(168, 85, 247, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
+  }
+}
+
+@keyframes neon-flicker {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.95;
+    filter: brightness(1.15);
+  }
+}
+
+/* Typography Glow Animations */
+@keyframes text-glow-shift {
+  0% {
+    text-shadow: 
+      0 0 10px rgba(34, 211, 238, 0.8),
+      0 0 20px rgba(34, 211, 238, 0.6),
+      0 0 30px rgba(34, 211, 238, 0.4);
+    filter: brightness(1);
+  }
+  33% {
+    text-shadow: 
+      0 0 12px rgba(236, 72, 153, 0.8),
+      0 0 24px rgba(236, 72, 153, 0.6),
+      0 0 36px rgba(236, 72, 153, 0.4);
+    filter: brightness(1.1);
+  }
+  66% {
+    text-shadow: 
+      0 0 11px rgba(168, 85, 247, 0.8),
+      0 0 22px rgba(168, 85, 247, 0.6),
+      0 0 33px rgba(168, 85, 247, 0.4);
+    filter: brightness(1.05);
+  }
+  100% {
+    text-shadow: 
+      0 0 10px rgba(34, 211, 238, 0.8),
+      0 0 20px rgba(34, 211, 238, 0.6),
+      0 0 30px rgba(34, 211, 238, 0.4);
+    filter: brightness(1);
+  }
+}
+
+@keyframes text-glow-pulse {
+  0%, 100% {
+    text-shadow: 
+      0 0 8px currentColor,
+      0 0 16px currentColor,
+      0 0 24px currentColor;
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow: 
+      0 0 12px currentColor,
+      0 0 24px currentColor,
+      0 0 36px currentColor;
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes text-glow-flicker {
+  0%, 100% {
+    text-shadow: 
+      0 0 10px currentColor,
+      0 0 20px currentColor;
+    opacity: 1;
+  }
+  45% {
+    text-shadow: 
+      0 0 10px currentColor,
+      0 0 20px currentColor;
+    opacity: 1;
+  }
+  50% {
+    text-shadow: 
+      0 0 6px currentColor,
+      0 0 12px currentColor;
+    opacity: 0.92;
+  }
+  55% {
+    text-shadow: 
+      0 0 12px currentColor,
+      0 0 24px currentColor;
+    opacity: 1;
+  }
+}
+
+@keyframes text-shimmer {
+  0% {
+    text-shadow: 
+      0 0 10px rgba(34, 211, 238, 0.7),
+      0 0 20px rgba(34, 211, 238, 0.5);
+  }
+  25% {
+    text-shadow: 
+      0 0 12px rgba(168, 85, 247, 0.7),
+      0 0 24px rgba(168, 85, 247, 0.5);
+  }
+  50% {
+    text-shadow: 
+      0 0 11px rgba(236, 72, 153, 0.7),
+      0 0 22px rgba(236, 72, 153, 0.5);
+  }
+  75% {
+    text-shadow: 
+      0 0 12px rgba(168, 85, 247, 0.7),
+      0 0 24px rgba(168, 85, 247, 0.5);
+  }
+  100% {
+    text-shadow: 
+      0 0 10px rgba(34, 211, 238, 0.7),
+      0 0 20px rgba(34, 211, 238, 0.5);
+  }
+}
+
+/* Typography Glow Classes */
+.text-glow-shift {
+  animation: text-glow-shift 4s ease-in-out infinite;
+  will-change: text-shadow, filter;
+  transform: translateZ(0);
+}
+
+.text-glow-pulse {
+  animation: text-glow-pulse 2s ease-in-out infinite;
+  will-change: text-shadow, filter;
+  transform: translateZ(0);
+}
+
+.text-glow-flicker {
+  animation: text-glow-flicker 3s ease-in-out infinite;
+  will-change: text-shadow, opacity;
+  transform: translateZ(0);
+}
+
+.text-shimmer {
+  animation: text-shimmer 3.5s ease-in-out infinite;
+  will-change: text-shadow;
+  transform: translateZ(0);
+}
+
+/* Static text glow (no animation) */
+.text-glow-static {
+  text-shadow: 
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 30px currentColor;
+}
+
+/* Audio-reactive text glow (applied via inline styles) */
+.text-glow-reactive {
+  will-change: text-shadow, filter;
+  transform: translateZ(0);
+  transition: text-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.audio-reactive-glow {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.audio-reactive-border {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.audio-reactive-panel {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.audio-reactive-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.audio-reactive-button {
+  transition: all 0.2s ease;
+}
+
+/* DJ Access Button Pulse Animation */
+@keyframes dj-access-pulse {
+  0% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(34, 197, 94, 0.9);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+    transform: scale(1);
+  }
+}
+
+.dj-access-pulse {
+  animation: dj-access-pulse 0.6s ease-in-out;
+}
+
+/* Transition Pulse Effect */
+@keyframes transition-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+    box-shadow: inset 0 0 120px rgba(168, 85, 247, 0.4);
+  }
+}
+
+.dj-transition-pulse {
+  animation: transition-pulse 0.5s ease-in-out;
+}
+
+/* Smooth Transitions */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-in-from-top {
+  animation: slideInFromTop 0.5s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-from-bottom {
+  animation: slideInFromBottom 0.5s ease-out;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Enhanced GPU Acceleration Hints */
+.audio-reactive-glow,
+.audio-reactive-border,
+.audio-reactive-panel,
+.audio-reactive-pulse,
+.audio-reactive-button,
+.text-glow-shift,
+.text-glow-pulse,
+.text-glow-flicker,
+.text-shimmer,
+.text-glow-reactive {
+  will-change: box-shadow, transform, opacity, text-shadow, filter;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: rgba(168, 85, 247, 0.3);
+  }
+}
+
+/* Performance optimization for mobile */
+@media (max-width: 768px) {
+  .audio-reactive-glow,
+  .audio-reactive-border,
+  .audio-reactive-pulse {
+    animation-duration: 2s;
+  }
+  
+  .text-glow-shift {
+    animation-duration: 5s;
+  }
+  
+  .text-shimmer {
+    animation-duration: 4.5s;
+  }
+
+  /* Reduce animation complexity on mobile */
+  .text-glow-shift,
+  .text-glow-pulse,
+  .text-shimmer {
+    animation-timing-function: linear;
+  }
+}
+
+/* Ensure smooth scrolling on mobile */
+@supports (-webkit-overflow-scrolling: touch) {
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}

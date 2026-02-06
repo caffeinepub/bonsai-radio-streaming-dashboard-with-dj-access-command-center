@@ -1,0 +1,90 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-04T20:30:30.670Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 4,
+    "implemented": 4,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Improve AirPlay runtime detection so the app correctly reflects when AirPlay is actually available vs unavailable, by using the `webkitplaybacktargetavailabilitychanged` event payload to set `isAvailable` true/false (not always true), and keep `isConnected` synchronized with `webkitCurrentPlaybackTargetIsWireless` on initial load and on change.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/types/airplay.d.ts",
+          "frontend/src/hooks/useAirPlay.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/types/airplay.d.ts",
+          "frontend/src/hooks/useAirPlay.ts"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "When the AirPlay route changes (connect/disconnect), automatically recover playback by reloading the current audio source and resuming playback if the user was playing, while preserving the intended track and approximate playback position when possible.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useAirPlayPlaybackRecovery.ts",
+          "frontend/src/components/RadioPlayer.tsx",
+          "frontend/src/components/EmbeddedMusicPlayer.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useAirPlayPlaybackRecovery.ts",
+          "frontend/src/components/RadioPlayer.tsx",
+          "frontend/src/components/EmbeddedMusicPlayer.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Reduce AirPlay buffering stalls by adjusting the player’s buffering/retry strategy specifically when AirPlay is connected (e.g., more conservative thresholding and/or quicker recovery actions on repeated `waiting`/low-buffer conditions), without regressing non-AirPlay playback.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/airplayBufferingStrategy.ts",
+          "frontend/src/components/RadioPlayer.tsx",
+          "frontend/src/components/EmbeddedMusicPlayer.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/airplayBufferingStrategy.ts",
+          "frontend/src/components/RadioPlayer.tsx",
+          "frontend/src/components/EmbeddedMusicPlayer.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Add clear, English user-facing messaging in the player UI when AirPlay is connected but audio is not successfully playing (e.g., extended buffering or repeated playback failures), including a one-click action to retry/reconnect AirPlay playback (e.g., “Retry AirPlay” or “Reconnect”).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/AirPlayPlaybackAlert.tsx",
+          "frontend/src/components/RadioPlayer.tsx",
+          "frontend/src/components/EmbeddedMusicPlayer.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/AirPlayPlaybackAlert.tsx",
+          "frontend/src/components/RadioPlayer.tsx",
+          "frontend/src/components/EmbeddedMusicPlayer.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/AirPlayPlaybackAlert.tsx",
+    "frontend/src/components/EmbeddedMusicPlayer.tsx",
+    "frontend/src/components/RadioPlayer.tsx",
+    "frontend/src/hooks/useAirPlay.ts",
+    "frontend/src/hooks/useAirPlayPlaybackRecovery.ts",
+    "frontend/src/types/airplay.d.ts",
+    "frontend/src/utils/airplayBufferingStrategy.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-04T20:30:30.630Z",
+  "summary": "Diff implements the requested AirPlay reliability improvements via a more accurate AirPlay availability/connection hook, a route-change playback recovery hook used by both players, an AirPlay-specific buffering/recovery strategy helper, and a new user-facing AirPlay retry alert component integrated into the players (per modified player files and file summaries).",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.71,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/components/AirPlayPlaybackAlert.tsx",
+    "frontend/src/components/EmbeddedMusicPlayer.tsx",
+    "frontend/src/components/RadioPlayer.tsx",
+    "frontend/src/hooks/useAirPlay.ts",
+    "frontend/src/hooks/useAirPlayPlaybackRecovery.ts",
+    "frontend/src/types/airplay.d.ts",
+    "frontend/src/utils/airplayBufferingStrategy.ts",
+    "project_state.json"
+  ]
+}

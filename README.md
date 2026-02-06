@@ -1,2 +1,3 @@
-# bonsai-radio-streaming-dashboard-with-dj-access-command-center
-Exported from Caffeine project: Bonsai Radio Streaming Dashboard
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

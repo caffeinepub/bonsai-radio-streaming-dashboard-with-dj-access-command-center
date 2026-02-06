@@ -1,0 +1,291 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 7,
+  "summary": "Bonsai Radio is a cyberpunk-themed Progressive Web App (PWA) for streaming playlist-based \"radio\" audio from an Internet Computer (Motoko) backend. Public users can browse playlists, play tracks in sequence, increment per-track play counts, and participate in listener-count sessions. Authenticated DJs (Internet Identity + admin role) get a command-center dashboard to manage a media library (upload/edit/delete/search), build playlists (from uploads or the library), and curate audio-reactive background visuals via a GIF gallery and tunable overlay settings. AirPlay support is being integrated for streaming audio to AirPlay-enabled devices.",
+  "existing_features": [
+    {
+      "id": "IF-1",
+      "title": "Public playlist browsing",
+      "synonyms": [
+        "Playlist listing",
+        "Get playlists"
+      ],
+      "description": "Provides a public backend query (getPlaylists) and frontend query hook (useGetPlaylists) to fetch and display available playlists and their tracks without authentication, with periodic polling for freshness.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-2",
+      "title": "Radio-style streaming player",
+      "synonyms": [
+        "RadioPlayer",
+        "Sequential playback"
+      ],
+      "description": "Public player UI to select a playlist/channel, play/pause audio, display now-playing metadata, auto-advance tracks on ended, and show per-track play counts.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-3",
+      "title": "Play count tracking",
+      "synonyms": [
+        "Track plays",
+        "incrementPlayCount"
+      ],
+      "description": "On track end, the frontend calls a public mutation to increment a track’s playCount inside the selected playlist, and refreshes playlist data via React Query invalidation.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-4",
+      "title": "Listener count and sessions",
+      "synonyms": [
+        "Live listeners",
+        "start/stop listener session"
+      ],
+      "description": "Backend tracks active listener sessions and exposes listenerCount publicly; frontend starts a session when playback begins (RadioPlayer) and stops it on unmount, while polling and displaying current listener count.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-5",
+      "title": "Stream stability monitoring and adaptive retry",
+      "synonyms": [
+        "Buffering indicator",
+        "Auto-retry playback"
+      ],
+      "description": "Players detect buffering/error states (waiting/progress/error events), show a StreamStabilityIndicator, and attempt exponential-backoff retries with jitter and fade-in on recovery.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Audio analysis for reactive UI",
+      "synonyms": [
+        "useAudioAnalyzer",
+        "Web Audio FFT"
+      ],
+      "description": "Analyzes playing audio via Web Audio API (AnalyserNode) to compute volume, frequency bands, bass kick detection, and spectral centroid, with adaptive throttling for mobile/hidden tabs.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-7",
+      "title": "Audio-reactive cyberpunk background visuals",
+      "synonyms": [
+        "CyberpunkBackground",
+        "Canvas particles"
+      ],
+      "description": "Renders an animated cyberpunk wallpaper with parallax and canvas-based particles/flares/light beams; intensity reacts to audio analysis data and adapts frame rate for performance.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "Background GIF overlay during playback",
+      "synonyms": [
+        "BackgroundGifOverlay",
+        "Track-change GIF"
+      ],
+      "description": "Displays a semi-transparent GIF overlay when playing; selects random GIF on track change (if enabled) with fade transitions and backend-configurable transparency/fade/intensity.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "DJ authentication via Internet Identity",
+      "synonyms": [
+        "II login",
+        "DJ access modal"
+      ],
+      "description": "Implements Internet Identity login/logout, session restoration, and a DJAuthModal UX; authenticated identity is used to create an authorized actor and check admin status before showing DJ tools.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "Role-based access control (admin/user/guest)",
+      "synonyms": [
+        "AccessControl",
+        "isCallerAdmin"
+      ],
+      "description": "Backend enforces permissions for DJ-only operations (media library, playlist writes, GIF management). Access control is initialized via secret token; only admins can assign roles or initialize default GIFs.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "DJ dashboard and control panel",
+      "synonyms": [
+        "DJ Command Center",
+        "PlaylistManager tabs"
+      ],
+      "description": "Admin-only dashboard with stats and a tabbed control panel (create playlists, view playlists, media library, embedded player, background visuals), with active tab persisted to localStorage.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Media library management (DJ)",
+      "synonyms": [
+        "Track library",
+        "getSortedMediaLibrary"
+      ],
+      "description": "DJ-only media library supports upload (ExternalBlob), list, sort, search, edit metadata, and delete tracks; UI includes table view, search, sorting, and status badges.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "Batch operations for tracks",
+      "synonyms": [
+        "Multi-select",
+        "Batch edit/add"
+      ],
+      "description": "Media library supports multi-select with batch actions: add one/many tracks to one/many playlists and batch edit metadata fields via BatchEditTrackDialog.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-14",
+      "title": "Playlist management (DJ)",
+      "synonyms": [
+        "Create playlist",
+        "Add tracks to playlist"
+      ],
+      "description": "DJ-only mutations to create playlists from uploaded files, create playlists from media library selections, and add single/multiple library tracks to existing playlists; frontend forms and dialogs cover these flows.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-15",
+      "title": "Background visuals administration (DJ)",
+      "synonyms": [
+        "BackgroundVisualsManager",
+        "GIF gallery/settings"
+      ],
+      "description": "DJ UI to upload/delete background GIFs, preview visuals, and update settings (transparency, fade duration, animation intensity, randomization). Includes client-side queuing behavior for “upload system not ready” errors.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-16",
+      "title": "Default background GIF seeding",
+      "synonyms": [
+        "initializeDefaultGifs",
+        "First admin setup"
+      ],
+      "description": "On first admin session, the frontend can seed the backend with a default set of GIFs (from bundled assets) if the backend collection is empty.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-17",
+      "title": "PWA installability and theming",
+      "synonyms": [
+        "manifest",
+        "standalone app"
+      ],
+      "description": "Includes manifest.json, theme colors, icons, and meta tags to support installation as a standalone Progressive Web App with Bonsai Radio branding.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-18",
+      "title": "Caffeine blob storage integration utilities",
+      "synonyms": [
+        "Storage mixin",
+        "Gateway authorization/GC"
+      ],
+      "description": "Backend includes storage mixin endpoints for gateway principal updates, dead-blob listing and confirmation, cashier refill, and certificate creation to support ExternalBlob upload lifecycle.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-19",
+      "title": "User profile storage (backend)",
+      "synonyms": [
+        "UserProfile",
+        "saveCallerUserProfile"
+      ],
+      "description": "Backend supports saving and retrieving user profiles for authenticated users (user role), with admin override for viewing other profiles; no frontend UI is shown in provided files.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-airplay-runtime-detection-so-the-app-correctly-reflects-when-airplay-is-actually-available-vs-unavailable-by-using-the-webkitplaybacktargetavailabilitychanged-event-payload-to-set-isavailable-true-false-not-always-true-and-keep-isconnected-synchronized-with-webkitcurrentplaybacktargetiswireless-on-initial-load-and-on-change",
+      "title": "Improve AirPlay runtime detection so the app correctly reflects when AirPlay is actually available vs unavailable, by using the `webkitplaybacktargetavailabilitychanged` event payload to set `isAvailable` true/false (not always true), and keep `isConnected` synchronized with `webkitCurrentPlaybackTargetIsWireless` on initial load and on change.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-when-the-airplay-route-changes-connect-disconnect-automatically-recover-playback-by-reloading-the-current-audio-source-and-resuming-playback-if-the-user-was-playing-while-preserving-the-intended-track-and-approximate-playback-position-when-possible",
+      "title": "When the AirPlay route changes (connect/disconnect), automatically recover playback by reloading the current audio source and resuming playback if the user was playing, while preserving the intended track and approximate playback position when possible.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-reduce-airplay-buffering-stalls-by-adjusting-the-player-s-buffering-retry-strategy-specifically-when-airplay-is-connected-e-g-more-conservative-thresholding-and-or-quicker-recovery-actions-on-repeated-waiting-low-buffer-conditions-without-regressing-non-airplay-playback",
+      "title": "Reduce AirPlay buffering stalls by adjusting the player’s buffering/retry strategy specifically when AirPlay is connected (e.g., more conservative thresholding and/or quicker recovery actions on repeated `waiting`/low-buffer conditions), without regressing non-AirPlay playback.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-clear-english-user-facing-messaging-in-the-player-ui-when-airplay-is-connected-but-audio-is-not-successfully-playing-e-g-extended-buffering-or-repeated-playback-failures-including-a-one-click-action-to-retry-reconnect-airplay-playback-e-g-retry-airplay-or-reconnect",
+      "title": "Add clear, English user-facing messaging in the player UI when AirPlay is connected but audio is not successfully playing (e.g., extended buffering or repeated playback failures), including a one-click action to retry/reconnect AirPlay playback (e.g., “Retry AirPlay” or “Reconnect”).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Integrate Apple AirPlay support for streaming audio to AirPlay-enabled devices from the web app (including optional device-selection UI).",
+      "reqIds": [],
+      "status": "in_progress"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Fix AirPlay playback reliability: reduce buffering and ensure audio actually routes to the AirPlay device during playback.",
+      "reqIds": [],
+      "status": "blocked"
+    }
+  ],
+  "architectural_notes": [
+    "Frontend is React + TypeScript using @tanstack/react-query for all backend interactions (queries, mutations, cache invalidation, periodic polling).",
+    "Internet Identity authentication is encapsulated in a provider hook (AuthClient), exposing identity/login/logout and login status to the app.",
+    "Canister actor creation is centralized in a useActor hook; actor is recreated per identity and triggers downstream query invalidation/refetch.",
+    "Backend is a single Motoko actor using in-memory Map structures for playlists, media library, listener sessions, background GIFs/settings, and user profiles (no stable persistence shown).",
+    "Role-based access control is implemented via an AccessControl module and included as a mixin; first valid caller with an admin token becomes admin; others become users/guests.",
+    "Blob uploads are handled via a Caffeine storage mixin (ExternalBlob) with gateway authorization updates, blob lifecycle queries, and cashier refill hooks.",
+    "UI uses TailwindCSS + shadcn/ui components with extensive custom neon animations and responsive layouts.",
+    "Audio-reactive visuals are driven by a Web Audio API analyser hook (FFT/bands/kick detection), influencing background canvas effects and UI glow styles.",
+    "App includes a dual-mode UX: public RadioPlayer and DJDashboard with tabbed tools and localStorage persistence for active tab.",
+    "Default background GIFs are seeded on first admin session by sending asset URLs to the backend initialization method."
+  ],
+  "known_issues": [
+    "Track identity is effectively the track title throughout (mediaLibrary Map key, update/delete operations, playlist add operations), making IDs non-unique and prone to collisions/overwrites.",
+    "Renaming a track title via updateTrackMetadata/updateTracksMetadata does not migrate the Map key; title changes can desync lookup IDs and stored values.",
+    "Volume normalization toggles reference gainNodeRef, but no GainNode is created/connected in the players; normalization likely has no effect.",
+    "Listener sessions are keyed by caller Principal; anonymous users share the anonymous principal, so listener counts may be inaccurate for unauthenticated listeners.",
+    "startListenerSession traps if a session already exists; refresh/reconnect flows can yield repeated \"already active\" errors unless stopListenerSession runs successfully.",
+    "Public getBackgroundGifs has no pagination/limits and returns full blobs array; large GIF collections could impact performance/bandwidth.",
+    "AccessControl.getUserRole traps for unregistered principals; behavior depends on clients always calling _initializeAccessControlWithSecret after authentication.",
+    "Backend state is in-memory only in the provided code; playlists/media library/background GIFs likely reset on canister upgrade unless stable storage exists elsewhere.",
+    "Caffeine blob storage uploads can fail with `403 - Owner does not have an account with the cashier`, blocking track/GIF uploads until the canister is activated/registered with the storage cashier.",
+    "AirPlay may connect to a device but playback buffers heavily and/or produces no audio output through the AirPlay route (routing/compatibility issue in current AirPlay integration)."
+  ],
+  "isFixRequest": true,
+  "gameProjectType": "none",
+  "projectName": "Bonsai Radio Streaming Dashboard",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
