@@ -1,102 +1,48 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "AirPlay playback reliability improvements (detection, recovery, buffering, UI messaging)",
+  "title": "Fix MP3 selection + robust duration handling in MediaUploadDialog",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Fix AirPlay availability/connection detection using Safari event payload and keep connected state synced with the media element’s wireless flag.",
+      "summary": "Allow selecting valid .mp3 files even when MIME type is empty/unknown, while still rejecting non-audio files, and explicitly advertise MP3 support in the file input accept list.",
       "acceptanceCriteria": [
-        "In Safari on an Apple device, the AirPlay button is disabled when AirPlay is not available and enabled when it is available.",
-        "When disconnecting from an AirPlay device, the UI reflects the disconnected state within 1 second without requiring a page reload.",
-        "No console errors are thrown from the AirPlay hook during connect/disconnect cycles."
+        "In MediaUploadDialog, selecting a valid .mp3 file is not blocked by the `file.type.startsWith('audio/')` check when `file.type` is empty/unknown.",
+        "Non-audio files (e.g., .txt) are still rejected with a clear error message.",
+        "The file input accept configuration explicitly includes MP3 support (e.g., includes .mp3 and/or audio/mpeg) and continues to allow other supported audio formats."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/types/airplay.d.ts",
-          "operation": "modify",
-          "description": "Extend Safari AirPlay typings to represent the `webkitplaybacktargetavailabilitychanged` event payload (e.g., availability values) and ensure the wireless-change event is typed to avoid unsafe casts and runtime console errors."
+          "path": "frontend/src/utils/audioFileUtils.ts",
+          "operation": "create",
+          "description": "Add frontend utilities for audio upload validation (e.g., accept when MIME is audio/* OR when MIME is empty/unknown but the extension is a known supported audio extension like .mp3). Keep validation strict enough to reject clearly non-audio files. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/hooks/useAirPlay.ts",
+          "path": "frontend/src/components/MediaUploadDialog.tsx",
           "operation": "modify",
-          "description": "Update AirPlay detection: set `isAvailable` based on the `webkitplaybacktargetavailabilitychanged` event payload (true/false, not always true), and synchronize `isConnected` with `webkitCurrentPlaybackTargetIsWireless` on initial load and whenever it changes; ensure listeners are resilient and do not throw during rapid connect/disconnect cycles."
+          "description": "Replace the current `file.type.startsWith('audio/')` gating with the new validation utility so MP3s with empty/unknown MIME type are accepted based on extension, while non-audio files are rejected with a clear toast error. Update the file input `accept` attribute to explicitly include MP3 support (e.g., include .mp3 and audio/mpeg alongside other supported audio formats). Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Automatically recover playback on AirPlay route changes by reloading the current source and resuming when the user was playing, preserving track and approximate position when possible.",
+      "summary": "Make MP3 metadata extraction resilient by falling back when decodeAudioData fails and allow manual duration entry when auto-detection is not possible.",
       "acceptanceCriteria": [
-        "If a user is actively playing and then connects to an AirPlay device, the audio begins playing through the AirPlay device within 5 seconds without manual refresh.",
-        "If a user is actively playing and then disconnects from AirPlay, the audio resumes locally within 5 seconds without manual refresh.",
-        "Play/pause state in the UI remains consistent with actual playback state after route changes."
+        "In MediaUploadDialog, MP3 files that fail `decodeAudioData` are still added to the upload queue instead of being dropped with only a generic “Failed to process” error.",
+        "Duration is populated via a fallback method when `decodeAudioData` fails, for common MP3 files.",
+        "If duration cannot be auto-detected, the UI allows manually editing duration (and the upload flow permits uploading with the entered duration).",
+        "Uploading an MP3 from MediaUploadDialog successfully completes and creates a track in the media library."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useAirPlayPlaybackRecovery.ts",
-          "operation": "create",
-          "description": "Create a focused hook that observes AirPlay connection state changes and coordinates a safe playback recovery attempt (capture current track URL + approximate time, reload media, attempt resume only if previously playing, guard against overlapping recovery attempts)."
+          "path": "frontend/src/utils/audioFileUtils.ts",
+          "operation": "modify",
+          "description": "Extend the audio utilities with a robust duration extraction helper: try Web Audio API decodeAudioData first, and if it fails, fall back to HTMLAudioElement metadata loading (object URL) to obtain duration. Return a clear signal when duration cannot be determined automatically so the UI can request manual input. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/RadioPlayer.tsx",
+          "path": "frontend/src/components/MediaUploadDialog.tsx",
           "operation": "modify",
-          "description": "Wire AirPlay route-change recovery into the main player: use the new recovery hook with the existing `audioRef`, current track source, `isPlaying` intent, and `savedPosition` so connect/disconnect triggers a reload+resume flow while keeping UI play/pause consistent."
-        },
-        {
-          "path": "frontend/src/components/EmbeddedMusicPlayer.tsx",
-          "operation": "modify",
-          "description": "Wire the same AirPlay route-change recovery behavior into the embedded player so connect/disconnect triggers reload+resume with best-effort position preservation without requiring a refresh."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Reduce AirPlay buffering stalls with an AirPlay-specific buffering/recovery strategy while keeping non-AirPlay playback behavior unchanged.",
-      "acceptanceCriteria": [
-        "With AirPlay connected, the player does not remain in a continuous buffering state for more than 10 seconds without attempting a recovery action (reload/resume) during normal network conditions.",
-        "With AirPlay not connected, playback behavior is unchanged (no new buffering regressions in the existing stream stability indicator behavior)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/airplayBufferingStrategy.ts",
-          "operation": "create",
-          "description": "Introduce a small utility to encapsulate AirPlay-connected buffering heuristics (e.g., adjusted buffer-ahead thresholds and a capped, quicker recovery cadence for repeated `waiting` / low-buffer conditions) without altering non-AirPlay defaults."
-        },
-        {
-          "path": "frontend/src/components/RadioPlayer.tsx",
-          "operation": "modify",
-          "description": "Apply the AirPlay-specific buffering/retry strategy only when `airPlay.isConnected` is true: adjust buffering detection thresholds and add a timed recovery attempt when stuck buffering, while preserving the existing non-AirPlay behavior and StreamStabilityIndicator semantics."
-        },
-        {
-          "path": "frontend/src/components/EmbeddedMusicPlayer.tsx",
-          "operation": "modify",
-          "description": "Apply the same AirPlay-only buffering strategy in the embedded player: detect prolonged buffering under AirPlay and trigger a bounded recovery (reload/resume), leaving non-AirPlay buffering logic unchanged."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Show clear English messaging when AirPlay is connected but audio isn’t playing successfully, with a one-click Retry/Reconnect action.",
-      "acceptanceCriteria": [
-        "When AirPlay is connected and the app detects prolonged buffering/retry failures, the UI displays an actionable message in English describing the issue.",
-        "Clicking the retry/reconnect action triggers a playback recovery attempt (and if appropriate, opens the AirPlay picker) without crashing the app."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/AirPlayPlaybackAlert.tsx",
-          "operation": "create",
-          "description": "Create a small player-UI alert component that renders English status text when AirPlay is connected but playback appears stuck (e.g., prolonged buffering / repeated recovery failures) and provides a single-button action like “Retry AirPlay” that calls a supplied retry handler (and can optionally invoke the AirPlay picker)."
-        },
-        {
-          "path": "frontend/src/components/RadioPlayer.tsx",
-          "operation": "modify",
-          "description": "Add AirPlay playback messaging to the player UI: detect prolonged buffering / repeated failures specifically while `airPlay.isConnected`, render `AirPlayPlaybackAlert`, and wire its action to trigger a recovery attempt and (when appropriate) call `airPlay.showPicker()`."
-        },
-        {
-          "path": "frontend/src/components/EmbeddedMusicPlayer.tsx",
-          "operation": "modify",
-          "description": "Add the same AirPlay playback messaging and one-click retry behavior to the embedded player UI, reusing `AirPlayPlaybackAlert` and wiring it to the embedded player’s recovery handler plus optional `airPlay.showPicker()`."
+          "description": "Update metadata extraction so failed decodeAudioData does not drop the file: attempt duration fallback and, if still unknown, enqueue the track with duration unset/0 and a clear per-track message prompting manual duration entry. Adjust the duration field UI so that when duration is not auto-detected, the user can enter/edit duration (seconds or mm:ss as implemented) and the upload validation allows proceeding once a non-zero duration is provided. Ensure upload uses the entered duration when calling the existing addMediaTrack mutation. Verify the component's usage instructions before implementing."
         }
       ]
     }

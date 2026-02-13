@@ -15,7 +15,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Save, Loader2, Edit3 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Track } from '../backend';
+import type { Track, TrackUpdate } from '../backend';
 
 interface BatchEditTrackDialogProps {
   tracks: Track[];
@@ -70,13 +70,15 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
     }
 
     try {
-      const batch = tracks.map((track) => ({
-        trackId: track.title,
-        title: applyTitle ? title.trim() : track.title,
-        artist: applyArtist ? artist.trim() : track.artist,
-        album: applyAlbum ? (album.trim() || undefined) : (track.album || undefined),
-        duration: applyDuration ? BigInt(parseInt(duration)) : track.duration,
-      }));
+      const batch: Array<[string, TrackUpdate]> = tracks.map((track) => {
+        const update: TrackUpdate = {
+          title: applyTitle ? title.trim() : track.title,
+          artist: applyArtist ? artist.trim() : track.artist,
+          album: applyAlbum ? (album.trim() || undefined) : (track.album || undefined),
+          duration: applyDuration ? BigInt(parseInt(duration)) : track.duration,
+        };
+        return [track.id, update];
+      });
 
       await updateTracksMetadata.mutateAsync(batch);
       toast.success(`Successfully updated ${tracks.length} track${tracks.length > 1 ? 's' : ''}`);
@@ -108,7 +110,7 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
             <ScrollArea className="h-32 rounded-md border border-neon-purple/30 bg-black/30 p-3">
               <div className="space-y-1">
                 {tracks.map((track, idx) => (
-                  <div key={idx} className="text-sm text-gray-300 font-mono">
+                  <div key={track.id} className="text-sm text-gray-300 font-mono">
                     {idx + 1}. {track.title} - {track.artist}
                   </div>
                 ))}

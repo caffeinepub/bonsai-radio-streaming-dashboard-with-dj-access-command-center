@@ -115,6 +115,20 @@ export function useGetBackgroundSettings() {
   });
 }
 
+function normalizeStorageError(error: any): Error {
+  const message = error.message || String(error);
+  
+  if (message.includes('cashier') || message.includes('403')) {
+    return new Error('Upload system is initializing. Please wait a moment and try again.');
+  }
+  
+  if (message.includes('Unauthorized')) {
+    return new Error('You do not have permission to perform this action.');
+  }
+  
+  return error;
+}
+
 export function useUploadBackgroundGif() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -125,11 +139,7 @@ export function useUploadBackgroundGif() {
       try {
         return await actor.uploadBackgroundGif(gifId, gifFile);
       } catch (error: any) {
-        // Check for cashier registration errors
-        if (error.message?.includes('cashier') || error.message?.includes('403')) {
-          throw new Error('Upload system not ready. Please wait and try again.');
-        }
-        throw error;
+        throw normalizeStorageError(error);
       }
     },
     onSuccess: () => {
@@ -286,16 +296,14 @@ export function useAddMediaTrack() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       try {
-        return await actor.addMediaTrack(title, artist, album, duration, url);
+        const track = await actor.addMediaTrack(title, artist, album, duration, url);
+        return track;
       } catch (error: any) {
-        // Check for cashier registration errors
-        if (error.message?.includes('cashier') || error.message?.includes('403')) {
-          throw new Error('Upload system not ready. Please wait and try again.');
-        }
-        throw error;
+        throw normalizeStorageError(error);
       }
     },
     onSuccess: () => {
+      // Immediately invalidate and refetch the media library
       queryClient.invalidateQueries({ queryKey: ['mediaLibrary'] });
     },
   });
@@ -333,7 +341,7 @@ export function useUpdateTracksMetadata() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (batch: TrackUpdate[]) => {
+    mutationFn: async (batch: Array<[string, TrackUpdate]>) => {
       if (!actor) throw new Error('Actor not available');
       return actor.updateTracksMetadata(batch);
     },

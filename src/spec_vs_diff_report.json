@@ -1,20 +1,42 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-04T20:30:30.630Z",
-  "summary": "Diff implements the requested AirPlay reliability improvements via a more accurate AirPlay availability/connection hook, a route-change playback recovery hook used by both players, an AirPlay-specific buffering/recovery strategy helper, and a new user-facing AirPlay retry alert component integrated into the players (per modified player files and file summaries).",
-  "missing_requirements": [],
+  "generatedAt": "2026-02-12T19:34:24.150Z",
+  "summary": "Frontend adds new audio validation + duration extraction utilities and wires them into MediaUploadDialog to accept MP3s even with empty MIME types and to fall back from Web Audio API to HTMLAudioElement metadata loading. Backend/blob-storage MP3-specific handling is not evidenced in the provided diff summary, and the file input accept configuration / manual duration editing UI are not clearly shown due to truncation.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "The file input accept configuration in MediaUploadDialog explicitly includes MP3 support (e.g., includes .mp3 and/or audio/mpeg) while continuing to allow other supported audio formats.",
+      "reason": "The diff shows updated validation logic via isValidAudioFile(), but does not show the actual <input type=\"file\" ... accept=\"...\"> configuration in MediaUploadDialog (file truncated before the input JSX).",
+      "evidence": [
+        "frontend/src/components/MediaUploadDialog.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "If duration cannot be auto-detected, the UI allows manually entering/editing the track duration and the upload flow permits uploading with the entered duration.",
+      "reason": "The diff shows duration extraction returning null and a toast warning prompting manual entry, and adds parse/format helpers, but the truncated MediaUploadDialog snippet does not show any duration input controls or upload logic that uses a manually-entered duration.",
+      "evidence": [
+        "frontend/src/components/MediaUploadDialog.tsx (truncated)",
+        "frontend/src/utils/audioFileUtils.ts"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Adjust/verify backend blob-storage integration so MP3 blobs store/serve correctly (including correct audio/mpeg content type where applicable) and do not reject MP3 uploads; backend errors remain actionable.",
+      "reason": "backend/main.mo is shown but the provided truncated excerpt does not include any blob upload/store/serve logic changes, content-type handling, or MP3-specific acceptance adjustments. No other backend storage-related files are shown as modified.",
+      "evidence": [
+        "backend/main.mo (truncated)"
+      ]
+    }
+  ],
   "hallucinated_features": [],
-  "confidence": 0.71,
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AirPlayPlaybackAlert.tsx",
-    "frontend/src/components/EmbeddedMusicPlayer.tsx",
-    "frontend/src/components/RadioPlayer.tsx",
-    "frontend/src/hooks/useAirPlay.ts",
-    "frontend/src/hooks/useAirPlayPlaybackRecovery.ts",
-    "frontend/src/types/airplay.d.ts",
-    "frontend/src/utils/airplayBufferingStrategy.ts",
+    "frontend/src/components/MediaUploadDialog.tsx",
+    "frontend/src/utils/audioFileUtils.ts",
     "project_state.json"
   ]
 }

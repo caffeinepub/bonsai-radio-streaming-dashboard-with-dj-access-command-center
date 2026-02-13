@@ -25,7 +25,7 @@ export default function MediaLibrary() {
   const [sortBy, setSortBy] = useState<'title' | 'artist' | 'uploadDate'>('uploadDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
-  // Multi-select state
+  // Multi-select state - now using track.id instead of track.title
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [showBatchEdit, setShowBatchEdit] = useState(false);
   const [showBatchAddToPlaylist, setShowBatchAddToPlaylist] = useState(false);
@@ -47,7 +47,7 @@ export default function MediaLibrary() {
     } else if (sortBy === 'artist') {
       comparison = a.artist.localeCompare(b.artist);
     } else if (sortBy === 'uploadDate') {
-      comparison = a.uploadDate.localeCompare(b.uploadDate);
+      comparison = Number(a.uploadDate) - Number(b.uploadDate);
     }
     return sortOrder === 'asc' ? comparison : -comparison;
   });
@@ -75,12 +75,13 @@ export default function MediaLibrary() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const formatDate = (dateStr: string) => {
-    if (dateStr === 'TODO') return 'Recently';
+  const formatDate = (timestamp: bigint) => {
+    if (timestamp === BigInt(0)) return 'Recently';
     try {
-      return new Date(dateStr).toLocaleDateString();
+      const date = new Date(Number(timestamp) / 1000000);
+      return date.toLocaleDateString();
     } catch {
-      return dateStr;
+      return 'Recently';
     }
   };
 
@@ -95,7 +96,7 @@ export default function MediaLibrary() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedTracks(new Set(sortedTracks.map((track) => track.title)));
+      setSelectedTracks(new Set(sortedTracks.map((track) => track.id)));
     } else {
       setSelectedTracks(new Set());
     }
@@ -130,7 +131,7 @@ export default function MediaLibrary() {
   };
 
   const getSelectedTracksData = (): Track[] => {
-    return tracks.filter((track) => selectedTracks.has(track.title));
+    return tracks.filter((track) => selectedTracks.has(track.id));
   };
 
   const allSelected = sortedTracks.length > 0 && selectedTracks.size === sortedTracks.length;
@@ -295,15 +296,15 @@ export default function MediaLibrary() {
               <TableBody>
                 {sortedTracks.map((track) => (
                   <TableRow
-                    key={track.title}
+                    key={track.id}
                     className={`border-neon-purple/20 hover:bg-neon-purple/10 transition-colors ${
-                      selectedTracks.has(track.title) ? 'bg-neon-cyan/10' : ''
+                      selectedTracks.has(track.id) ? 'bg-neon-cyan/10' : ''
                     }`}
                   >
                     <TableCell>
                       <Checkbox
-                        checked={selectedTracks.has(track.title)}
-                        onCheckedChange={(checked) => handleSelectTrack(track.title, checked as boolean)}
+                        checked={selectedTracks.has(track.id)}
+                        onCheckedChange={(checked) => handleSelectTrack(track.id, checked as boolean)}
                         className="border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
                         aria-label={`Select ${track.title}`}
                       />
@@ -348,7 +349,7 @@ export default function MediaLibrary() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleDelete(track.title, track.title)}
+                          onClick={() => handleDelete(track.id, track.title)}
                           className="text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all hover:scale-110"
                           disabled={deleteTrack.isPending}
                           title="Delete Track"

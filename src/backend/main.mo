@@ -4,21 +4,25 @@ import Text "mo:core/Text";
 import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Order "mo:core/Order";
 import Nat "mo:core/Nat";
+import Order "mo:core/Order";
+import Time "mo:core/Time";
+
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+
 actor {
   type Track = {
+    id : Text;
     title : Text;
     artist : Text;
     album : ?Text;
     duration : Nat;
-    uploadDate : Text;
+    uploadDate : Int;
     url : Storage.ExternalBlob;
   };
 
@@ -44,7 +48,6 @@ actor {
   };
 
   type TrackUpdate = {
-    trackId : Text;
     title : Text;
     artist : Text;
     album : ?Text;
@@ -57,10 +60,14 @@ actor {
 
   type Listener = Principal;
 
+  // Authorization and storage mixins
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
+  var trackIdCounter : Nat = 1;
+
+  // Persistent state
   let playlists = Map.empty<Text, Playlist>();
   let mediaLibrary = Map.empty<Text, Track>();
   let userProfiles = Map.empty<Principal, UserProfile>();
@@ -163,16 +170,20 @@ actor {
       Runtime.trap("Unauthorized: Only DJs can add new tracks");
     };
 
+    let id = trackIdCounter.toText();
+    trackIdCounter += 1;
+
     let newTrack : Track = {
+      id;
       title;
       artist;
       album;
       duration;
-      uploadDate = "TODO";
+      uploadDate = Time.now();
       url;
     };
 
-    mediaLibrary.add(title, newTrack);
+    mediaLibrary.add(id, newTrack);
     newTrack;
   };
 
@@ -191,12 +202,11 @@ actor {
     switch (mediaLibrary.get(trackId)) {
       case (?existingTrack) {
         let updatedTrack : Track = {
+          existingTrack with
           title;
           artist;
           album;
           duration;
-          url = existingTrack.url;
-          uploadDate = existingTrack.uploadDate;
         };
         mediaLibrary.add(trackId, updatedTrack);
         updatedTrack;
@@ -207,23 +217,23 @@ actor {
     };
   };
 
-  public shared ({ caller }) func updateTracksMetadata(batch : [TrackUpdate]) : async [Track] {
+  public shared ({ caller }) func updateTracksMetadata(batch : [(Text, TrackUpdate)]) : async [Track] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only DJs can update tracks");
     };
 
     let updatedTracks = batch.map(
-      func(batchItem) {
-        switch (mediaLibrary.get(batchItem.trackId)) {
+      func((id, update)) {
+        switch (mediaLibrary.get(id)) {
           case (?track) {
             let updatedTrack : Track = {
               track with
-              title = batchItem.title;
-              artist = batchItem.artist;
-              album = batchItem.album;
-              duration = batchItem.duration;
+              title = update.title;
+              artist = update.artist;
+              album = update.album;
+              duration = update.duration;
             };
-            mediaLibrary.add(batchItem.trackId, updatedTrack);
+            mediaLibrary.add(id, updatedTrack);
             updatedTrack;
           };
           case (null) { Runtime.trap("Track not found in media library") };
@@ -249,17 +259,14 @@ actor {
 
   // Playlists - Public read access, DJ-only write access
   public query func getPlaylists() : async [Playlist] {
-    // Public access - no authentication required
     playlists.values().toArray().sort();
   };
 
   public query func getPlaylistsReverse() : async [Playlist] {
-    // Public access - no authentication required
     playlists.values().toArray().reverse();
   };
 
   public query func getFilteredPlaylists(playlistId : Text) : async [Playlist] {
-    // Public access - no authentication required
     playlists.values().toArray().filter(func(p) { p.id.contains(#text(playlistId)) });
   };
 
@@ -410,7 +417,6 @@ actor {
 
   // Play count increment - Public access for streaming
   public shared ({ caller }) func incrementPlayCount(playlistId : Text, trackTitle : Text) : async () {
-    // Public access - no authentication required for streaming
     switch (playlists.get(playlistId)) {
       case (?playlist) {
         let updatedTracks = playlist.tracks.map(
@@ -443,12 +449,10 @@ actor {
 
   // Listener count - Public access
   public query func getListenerCount() : async Nat {
-    // Public access - no authentication required
     listenerCount;
   };
 
   public shared ({ caller }) func startListenerSession() : async Listener {
-    // Public access - no authentication required for listener tracking
     switch (listeners.get(caller)) {
       case (?_) { Runtime.trap("Listener session already active for this user") };
       case (null) {
@@ -460,7 +464,6 @@ actor {
   };
 
   public shared ({ caller }) func stopListenerSession(listener : Listener) : async () {
-    // Public access - no authentication required for listener tracking
     if (caller != listener) {
       Runtime.trap("Unauthorized: Can only stop your own listener session");
     };
@@ -512,7 +515,6 @@ actor {
     backgroundSettings;
   };
 
-  // Initialize with default GIFs
   public shared ({ caller }) func initializeDefaultGifs(defaultGifs : [(Text, Storage.ExternalBlob)]) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can initialize default GIFs");
@@ -525,3 +527,4 @@ actor {
     };
   };
 };
+

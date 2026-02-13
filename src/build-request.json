@@ -1,91 +1,84 @@
 {
   "kind": "build_request",
-  "title": "Fix AirPlay playback reliability (buffering/no audio after connecting)",
-  "priority": "normal",
+  "title": "Fix MP3 uploads in the audio upload system",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Improve AirPlay runtime detection so the app correctly reflects when AirPlay is actually available vs unavailable, by using the `webkitplaybacktargetavailabilitychanged` event payload to set `isAvailable` true/false (not always true), and keep `isConnected` synchronized with `webkitCurrentPlaybackTargetIsWireless` on initial load and on change.",
+      "text": "Update the audio file selection validation so that .mp3 files can be selected and accepted even when the browser reports an empty/unknown MIME type (e.g., file.type is \"\"), while still rejecting clearly non-audio files.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "It connects to my patio speakers via airplay but when trying to play music, the app buffers a lot and doesn't play audio through the system"
+          "The upload system does not allow me to upload mp3 files. Debug the upload system"
         ]
       },
       "acceptanceCriteria": [
-        "In Safari on an Apple device, the AirPlay button is disabled when AirPlay is not available and enabled when it is available.",
-        "When disconnecting from an AirPlay device, the UI reflects the disconnected state within 1 second without requiring a page reload.",
-        "No console errors are thrown from the AirPlay hook during connect/disconnect cycles."
+        "In MediaUploadDialog, selecting a valid .mp3 file is not blocked by the `file.type.startsWith('audio/')` check when `file.type` is empty/unknown.",
+        "Non-audio files (e.g., .txt) are still rejected with a clear error message.",
+        "The file input accept configuration explicitly includes MP3 support (e.g., includes .mp3 and/or audio/mpeg) and continues to allow other supported audio formats."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "When the AirPlay route changes (connect/disconnect), automatically recover playback by reloading the current audio source and resuming playback if the user was playing, while preserving the intended track and approximate playback position when possible.",
+      "text": "Make metadata extraction for uploads robust for MP3s: if Web Audio API `decodeAudioData` fails for an MP3, fall back to an alternate duration detection strategy (e.g., HTMLAudioElement metadata loading). If duration still cannot be determined automatically, allow the user to manually enter/edit the track duration in the upload UI and proceed with upload.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "when trying to play music, the app buffers a lot and doesn't play audio through the system"
+          "The upload system does not allow me to upload mp3 files. Debug the upload system"
         ]
       },
       "acceptanceCriteria": [
-        "If a user is actively playing and then connects to an AirPlay device, the audio begins playing through the AirPlay device within 5 seconds without manual refresh.",
-        "If a user is actively playing and then disconnects from AirPlay, the audio resumes locally within 5 seconds without manual refresh.",
-        "Play/pause state in the UI remains consistent with actual playback state after route changes."
+        "In MediaUploadDialog, MP3 files that fail `decodeAudioData` are still added to the upload queue instead of being dropped with only a generic “Failed to process” error.",
+        "Duration is populated via a fallback method when `decodeAudioData` fails, for common MP3 files.",
+        "If duration cannot be auto-detected, the UI allows manually editing duration (and the upload flow permits uploading with the entered duration).",
+        "Uploading an MP3 from MediaUploadDialog successfully completes and creates a track in the media library."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Reduce AirPlay buffering stalls by adjusting the player’s buffering/retry strategy specifically when AirPlay is connected (e.g., more conservative thresholding and/or quicker recovery actions on repeated `waiting`/low-buffer conditions), without regressing non-AirPlay playback.",
-      "target": "frontend",
+      "text": "Verify and, if needed, adjust the backend/blob-storage integration so that storing and serving uploaded MP3 blobs works correctly (including correct handling of audio/mpeg content type where applicable) and does not reject MP3 uploads.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "the app buffers a lot"
+          "The upload system does not allow me to upload mp3 files. Debug the upload system"
         ]
       },
       "acceptanceCriteria": [
-        "With AirPlay connected, the player does not remain in a continuous buffering state for more than 10 seconds without attempting a recovery action (reload/resume) during normal network conditions.",
-        "With AirPlay not connected, playback behavior is unchanged (no new buffering regressions in the existing stream stability indicator behavior)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Add clear, English user-facing messaging in the player UI when AirPlay is connected but audio is not successfully playing (e.g., extended buffering or repeated playback failures), including a one-click action to retry/reconnect AirPlay playback (e.g., “Retry AirPlay” or “Reconnect”).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "doesn't play audio through the system"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When AirPlay is connected and the app detects prolonged buffering/retry failures, the UI displays an actionable message in English describing the issue.",
-        "Clicking the retry/reconnect action triggers a playback recovery attempt (and if appropriate, opens the AirPlay picker) without crashing the app."
+        "A successfully uploaded MP3 blob can be stored via the existing `addMediaTrack(..., url: Storage.ExternalBlob)` flow without backend traps or storage-layer rejections specific to MP3.",
+        "If the storage layer requires/uses content type, MP3 uploads are stored/served with an appropriate MP3 MIME type (audio/mpeg) so playback works in the frontend player.",
+        "Backend errors returned for upload failures remain actionable (no silent failures), and frontend receives a meaningful error message if an upload is rejected."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/components/ui (Shadcn UI sources are read-only).",
-    "Do not modify frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, or frontend/src/main.tsx (immutable paths).",
-    "Keep the backend architecture unchanged (single Motoko actor); do not introduce new backend services."
+    "Do not edit files under frontend/src/components/ui or any frontend immutablePaths listed in SYSTEM_CONTEXT."
   ],
   "nonGoals": [
-    "Adding third-party casting protocols (e.g., Chromecast).",
-    "Implementing real-time streaming protocols or WebSocket-based playback control.",
-    "Changing media storage providers or introducing an external database."
+    "Adding support for new non-audio file types.",
+    "Implementing third-party storage providers or external databases.",
+    "Changing authentication providers (Internet Identity remains the only auth option)."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

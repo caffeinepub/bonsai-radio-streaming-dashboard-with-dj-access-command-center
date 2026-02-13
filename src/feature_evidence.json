@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-improve-airplay-runtime-detection-so-the-app-correctly-reflects-when-airplay-is-actually-available-vs-unavailable-by-using-the-webkitplaybacktargetavailabilitychanged-event-payload-to-set-isavailable-true-false-not-always-true-and-keep-isconnected-synchronized-with-webkitcurrentplaybacktargetiswireless-on-initial-load-and-on-change",
-      "featureTitle": "Improve AirPlay runtime detection so the app correctly reflects when AirPlay is actually available vs unavailable, by using the `webkitplaybacktargetavailabilitychanged` event payload to set `isAvailable` true/false (not always true), and keep `isConnected` synchronized with `webkitCurrentPlaybackTargetIsWireless` on initial load and on change.",
+      "featureId": "feature-update-the-audio-file-selection-validation-so-that-mp3-files-can-be-selected-and-accepted-even-when-the-browser-reports-an-empty-unknown-mime-type-e-g-file-type-is-while-still-rejecting-clearly-non-audio-files",
+      "featureTitle": "Update the audio file selection validation so that .mp3 files can be selected and accepted even when the browser reports an empty/unknown MIME type (e.g., file.type is \"\"), while still rejecting clearly non-audio files.",
       "files": [
-        "frontend/src/hooks/useAirPlay.ts",
-        "frontend/src/types/airplay.d.ts"
+        "frontend/src/components/MediaUploadDialog.tsx",
+        "frontend/src/utils/audioFileUtils.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -23,12 +23,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-when-the-airplay-route-changes-connect-disconnect-automatically-recover-playback-by-reloading-the-current-audio-source-and-resuming-playback-if-the-user-was-playing-while-preserving-the-intended-track-and-approximate-playback-position-when-possible",
-      "featureTitle": "When the AirPlay route changes (connect/disconnect), automatically recover playback by reloading the current audio source and resuming playback if the user was playing, while preserving the intended track and approximate playback position when possible.",
+      "featureId": "feature-make-metadata-extraction-for-uploads-robust-for-mp3s-if-web-audio-api-decodeaudiodata-fails-for-an-mp3-fall-back-to-an-alternate-duration-detection-strategy-e-g-htmlaudioelement-metadata-loading-if-duration-still-cannot-be-determined-automatically-allow-the-user-to-manually-enter-edit-the-track-duration-in-the-upload-ui-and-proceed-with-upload",
+      "featureTitle": "Make metadata extraction for uploads robust for MP3s: if Web Audio API `decodeAudioData` fails for an MP3, fall back to an alternate duration detection strategy (e.g., HTMLAudioElement metadata loading). If duration still cannot be determined automatically, allow the user to manually enter/edit the track duration in the upload UI and proceed with upload.",
       "files": [
-        "frontend/src/components/EmbeddedMusicPlayer.tsx",
-        "frontend/src/components/RadioPlayer.tsx",
-        "frontend/src/hooks/useAirPlayPlaybackRecovery.ts"
+        "frontend/src/components/MediaUploadDialog.tsx",
+        "frontend/src/utils/audioFileUtils.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -41,50 +40,6 @@
       ],
       "testIds": [
         "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-reduce-airplay-buffering-stalls-by-adjusting-the-player-s-buffering-retry-strategy-specifically-when-airplay-is-connected-e-g-more-conservative-thresholding-and-or-quicker-recovery-actions-on-repeated-waiting-low-buffer-conditions-without-regressing-non-airplay-playback",
-      "featureTitle": "Reduce AirPlay buffering stalls by adjusting the player’s buffering/retry strategy specifically when AirPlay is connected (e.g., more conservative thresholding and/or quicker recovery actions on repeated `waiting`/low-buffer conditions), without regressing non-AirPlay playback.",
-      "files": [
-        "frontend/src/components/EmbeddedMusicPlayer.tsx",
-        "frontend/src/components/RadioPlayer.tsx",
-        "frontend/src/utils/airplayBufferingStrategy.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-clear-english-user-facing-messaging-in-the-player-ui-when-airplay-is-connected-but-audio-is-not-successfully-playing-e-g-extended-buffering-or-repeated-playback-failures-including-a-one-click-action-to-retry-reconnect-airplay-playback-e-g-retry-airplay-or-reconnect",
-      "featureTitle": "Add clear, English user-facing messaging in the player UI when AirPlay is connected but audio is not successfully playing (e.g., extended buffering or repeated playback failures), including a one-click action to retry/reconnect AirPlay playback (e.g., “Retry AirPlay” or “Reconnect”).",
-      "files": [
-        "frontend/src/components/AirPlayPlaybackAlert.tsx",
-        "frontend/src/components/EmbeddedMusicPlayer.tsx",
-        "frontend/src/components/RadioPlayer.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
       ],
       "confidence": "high"
     }

@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Make AirPlay playback more reliable by accurately detecting availability/connection state, automatically recovering playback on route changes, reducing AirPlay buffering stalls, and showing clear retry messaging when audio fails.
+**Goal:** Fix MP3 uploads so users can select, process, upload, and play MP3 tracks reliably.
 
 **Planned changes:**
-- Update AirPlay runtime detection to set availability from `webkitplaybacktargetavailabilitychanged` payload and keep connected state synced with `webkitCurrentPlaybackTargetIsWireless` on load and on changes.
-- On AirPlay connect/disconnect, reload the current audio source and resume playback when appropriate, preserving the intended track and approximate playback position when possible.
-- Add AirPlay-specific buffering/retry handling to avoid prolonged stalls and trigger recovery actions (reload/resume) without changing non-AirPlay playback behavior.
-- Add user-facing English UI messaging when AirPlay is connected but playback is failing (e.g., extended buffering), including a one-click “Retry AirPlay/Reconnect” action that attempts recovery (and opens the AirPlay picker when appropriate).
+- Update frontend file validation in `MediaUploadDialog` to accept `.mp3` files even when the browser provides an empty/unknown MIME type, while still rejecting clearly non-audio files with a clear error.
+- Adjust the file input accept configuration to explicitly include MP3 support (e.g., `.mp3` and/or `audio/mpeg`) while keeping other supported audio formats.
+- Make upload metadata extraction more robust for MP3: if Web Audio API `decodeAudioData` fails, fall back to alternate duration detection (e.g., HTMLAudioElement metadata loading).
+- If duration cannot be auto-detected, allow the user to manually enter/edit track duration in the upload UI and proceed with upload.
+- Verify/adjust backend blob storage integration to ensure MP3 blobs are accepted, stored, and served correctly (including using `audio/mpeg` where applicable) and return actionable errors on failure.
 
-**User-visible outcome:** In Safari on Apple devices, the AirPlay button correctly enables/disables based on availability; connect/disconnect state updates quickly; playback automatically recovers after route changes; and users see a clear retry option if AirPlay is connected but audio isn’t playing.
+**User-visible outcome:** Users can upload MP3 files from the media upload dialog; MP3s are accepted even with missing MIME type, duration is detected (or can be entered manually), uploads complete successfully, and tracks play correctly from the media library.

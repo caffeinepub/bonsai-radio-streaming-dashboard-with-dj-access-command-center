@@ -30,12 +30,13 @@ export interface BackgroundSettings {
     randomizationEnabled: boolean;
 }
 export interface Track {
+    id: string;
     url: ExternalBlob;
     title: string;
     duration: bigint;
     album?: string;
     artist: string;
-    uploadDate: string;
+    uploadDate: bigint;
 }
 export interface Playlist {
     id: string;
@@ -45,7 +46,6 @@ export interface TrackUpdate {
     title: string;
     duration: bigint;
     album?: string;
-    trackId: string;
     artist: string;
 }
 export interface UploadProgress {
@@ -94,6 +94,6 @@ export interface backendInterface {
     storeUploadProgress(progress: UploadProgress): Promise<UploadProgress>;
     updateBackgroundSettings(settings: BackgroundSettings): Promise<void>;
     updateTrackMetadata(trackId: string, title: string, artist: string, album: string | null, duration: bigint): Promise<Track>;
-    updateTracksMetadata(batch: Array<TrackUpdate>): Promise<Array<Track>>;
+    updateTracksMetadata(batch: Array<[string, TrackUpdate]>): Promise<Array<Track>>;
     uploadBackgroundGif(gifId: string, gifFile: ExternalBlob): Promise<void>;
 }
