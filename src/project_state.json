@@ -4,21 +4,13 @@
   "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "Upload system does not allow uploading .mp3 files (needs debugging/fix)."
+    "Playlist creation fails with 'track is not in the media library' error despite successful track upload"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-update-the-audio-file-selection-validation-so-that-mp3-files-can-be-selected-and-accepted-even-when-the-browser-reports-an-empty-unknown-mime-type-e-g-file-type-is-while-still-rejecting-clearly-non-audio-files",
-      "title": "Update the audio file selection validation so that .mp3 files can be selected and accepted even when the browser reports an empty/unknown MIME type (e.g., file.type is \"\"), while still rejecting clearly non-audio files.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-make-metadata-extraction-for-uploads-robust-for-mp3s-if-web-audio-api-decodeaudiodata-fails-for-an-mp3-fall-back-to-an-alternate-duration-detection-strategy-e-g-htmlaudioelement-metadata-loading-if-duration-still-cannot-be-determined-automatically-allow-the-user-to-manually-enter-edit-the-track-duration-in-the-upload-ui-and-proceed-with-upload",
-      "title": "Make metadata extraction for uploads robust for MP3s: if Web Audio API `decodeAudioData` fails for an MP3, fall back to an alternate duration detection strategy (e.g., HTMLAudioElement metadata loading). If duration still cannot be determined automatically, allow the user to manually enter/edit the track duration in the upload UI and proceed with upload.",
+      "id": "feature-update-the-createplaylistfromlibrarydialog-component-to-refresh-the-media-library-query-after-track-selection-to-ensure-recently-uploaded-tracks-are-available-for-playlist-creation",
+      "title": "Update the CreatePlaylistFromLibraryDialog component to refresh the media library query after track selection to ensure recently uploaded tracks are available for playlist creation.",
       "reqIds": [
         "REQ-2"
       ],
@@ -27,15 +19,15 @@
   ],
   "new_feature_requests": [
     {
-      "id": "AR-3",
-      "summary": "Verify and, if needed, adjust the backend/blob-storage integration so that storing and serving uploaded MP3 blobs works correctly (including correct handling of audio/mpeg content type where applicable) and does not reject MP3 uploads.",
+      "id": "AR-1",
+      "summary": "Fix the 'track is not in the media library' error that occurs when creating a playlist after successfully uploading a track. Ensure uploaded tracks are properly registered in the media library before playlist creation attempts.",
       "reqIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Fix MP3 uploads in the audio upload system",
+  "projectName": "Fix playlist creation error for uploaded tracks",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

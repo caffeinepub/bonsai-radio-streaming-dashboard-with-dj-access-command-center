@@ -58,7 +58,7 @@ export default function CreatePlaylistFromLibraryDialog({
     if (selectedTracks.length === filteredTracks.length) {
       setSelectedTracks([]);
     } else {
-      setSelectedTracks(filteredTracks.map((track) => track.title));
+      setSelectedTracks(filteredTracks.map((track) => track.id));
     }
   };
 
@@ -176,17 +176,17 @@ export default function CreatePlaylistFromLibraryDialog({
                   <div className="space-y-2">
                     {filteredTracks.map((track) => (
                       <div
-                        key={track.title}
+                        key={track.id}
                         className="flex items-start space-x-3 p-3 rounded hover:bg-neon-purple/10 transition-colors border border-transparent hover:border-neon-purple/30"
                       >
                         <Checkbox
-                          id={`track-${track.title}`}
-                          checked={selectedTracks.includes(track.title)}
-                          onCheckedChange={() => handleToggleTrack(track.title)}
+                          id={`track-${track.id}`}
+                          checked={selectedTracks.includes(track.id)}
+                          onCheckedChange={() => handleToggleTrack(track.id)}
                           className="mt-1 border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
                         />
                         <Label
-                          htmlFor={`track-${track.title}`}
+                          htmlFor={`track-${track.id}`}
                           className="flex-1 cursor-pointer space-y-1"
                         >
                           <div className="text-white font-medium">{track.title}</div>

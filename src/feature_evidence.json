@@ -2,32 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-audio-file-selection-validation-so-that-mp3-files-can-be-selected-and-accepted-even-when-the-browser-reports-an-empty-unknown-mime-type-e-g-file-type-is-while-still-rejecting-clearly-non-audio-files",
-      "featureTitle": "Update the audio file selection validation so that .mp3 files can be selected and accepted even when the browser reports an empty/unknown MIME type (e.g., file.type is \"\"), while still rejecting clearly non-audio files.",
+      "featureId": "feature-update-the-createplaylistfromlibrarydialog-component-to-refresh-the-media-library-query-after-track-selection-to-ensure-recently-uploaded-tracks-are-available-for-playlist-creation",
+      "featureTitle": "Update the CreatePlaylistFromLibraryDialog component to refresh the media library query after track selection to ensure recently uploaded tracks are available for playlist creation.",
       "files": [
-        "frontend/src/components/MediaUploadDialog.tsx",
-        "frontend/src/utils/audioFileUtils.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-make-metadata-extraction-for-uploads-robust-for-mp3s-if-web-audio-api-decodeaudiodata-fails-for-an-mp3-fall-back-to-an-alternate-duration-detection-strategy-e-g-htmlaudioelement-metadata-loading-if-duration-still-cannot-be-determined-automatically-allow-the-user-to-manually-enter-edit-the-track-duration-in-the-upload-ui-and-proceed-with-upload",
-      "featureTitle": "Make metadata extraction for uploads robust for MP3s: if Web Audio API `decodeAudioData` fails for an MP3, fall back to an alternate duration detection strategy (e.g., HTMLAudioElement metadata loading). If duration still cannot be determined automatically, allow the user to manually enter/edit the track duration in the upload UI and proceed with upload.",
-      "files": [
-        "frontend/src/components/MediaUploadDialog.tsx",
-        "frontend/src/utils/audioFileUtils.ts"
+        "frontend/src/components/CreatePlaylistFromLibraryDialog.tsx"
       ],
       "components": [
         "authorization@4.0.0",

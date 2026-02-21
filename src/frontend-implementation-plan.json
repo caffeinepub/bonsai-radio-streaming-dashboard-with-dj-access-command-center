@@ -1,48 +1,26 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix MP3 selection + robust duration handling in MediaUploadDialog",
+  "title": "Fix playlist creation error for uploaded tracks",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Allow selecting valid .mp3 files even when MIME type is empty/unknown, while still rejecting non-audio files, and explicitly advertise MP3 support in the file input accept list.",
-      "acceptanceCriteria": [
-        "In MediaUploadDialog, selecting a valid .mp3 file is not blocked by the `file.type.startsWith('audio/')` check when `file.type` is empty/unknown.",
-        "Non-audio files (e.g., .txt) are still rejected with a clear error message.",
-        "The file input accept configuration explicitly includes MP3 support (e.g., includes .mp3 and/or audio/mpeg) and continues to allow other supported audio formats."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/audioFileUtils.ts",
-          "operation": "create",
-          "description": "Add frontend utilities for audio upload validation (e.g., accept when MIME is audio/* OR when MIME is empty/unknown but the extension is a known supported audio extension like .mp3). Keep validation strict enough to reject clearly non-audio files. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/MediaUploadDialog.tsx",
-          "operation": "modify",
-          "description": "Replace the current `file.type.startsWith('audio/')` gating with the new validation utility so MP3s with empty/unknown MIME type are accepted based on extension, while non-audio files are rejected with a clear toast error. Update the file input `accept` attribute to explicitly include MP3 support (e.g., include .mp3 and audio/mpeg alongside other supported audio formats). Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
       "id": "REQ-2",
-      "summary": "Make MP3 metadata extraction resilient by falling back when decodeAudioData fails and allow manual duration entry when auto-detection is not possible.",
+      "summary": "Update the CreatePlaylistFromLibraryDialog component to refresh the media library query after track selection to ensure recently uploaded tracks are available for playlist creation",
       "acceptanceCriteria": [
-        "In MediaUploadDialog, MP3 files that fail `decodeAudioData` are still added to the upload queue instead of being dropped with only a generic “Failed to process” error.",
-        "Duration is populated via a fallback method when `decodeAudioData` fails, for common MP3 files.",
-        "If duration cannot be auto-detected, the UI allows manually editing duration (and the upload flow permits uploading with the entered duration).",
-        "Uploading an MP3 from MediaUploadDialog successfully completes and creates a track in the media library."
+        "The dialog verifies track availability in the media library before allowing playlist creation",
+        "Users receive clear feedback if a selected track is not yet available in the library",
+        "The component automatically retries library lookup if a track is temporarily unavailable"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/audioFileUtils.ts",
+          "path": "frontend/src/components/CreatePlaylistFromLibraryDialog.tsx",
           "operation": "modify",
-          "description": "Extend the audio utilities with a robust duration extraction helper: try Web Audio API decodeAudioData first, and if it fails, fall back to HTMLAudioElement metadata loading (object URL) to obtain duration. Return a clear signal when duration cannot be determined automatically so the UI can request manual input. Verify the component's usage instructions before implementing."
+          "description": "Add media library refresh logic before playlist creation to ensure recently uploaded tracks are queryable. Implement track availability verification with user feedback for tracks not yet in the library. Add automatic retry mechanism with exponential backoff for temporarily unavailable tracks. Display loading states and clear error messages when tracks are missing from the library."
         },
         {
-          "path": "frontend/src/components/MediaUploadDialog.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Update metadata extraction so failed decodeAudioData does not drop the file: attempt duration fallback and, if still unknown, enqueue the track with duration unset/0 and a clear per-track message prompting manual duration entry. Adjust the duration field UI so that when duration is not auto-detected, the user can enter/edit duration (seconds or mm:ss as implemented) and the upload validation allows proceeding once a non-zero duration is provided. Ensure upload uses the entered duration when calling the existing addMediaTrack mutation. Verify the component's usage instructions before implementing."
+          "description": "Add a mutation hook for manually refetching the media library query to support on-demand refresh in the CreatePlaylistFromLibraryDialog. Ensure the query invalidation properly clears stale data and triggers a fresh fetch from the backend."
         }
       ]
     }

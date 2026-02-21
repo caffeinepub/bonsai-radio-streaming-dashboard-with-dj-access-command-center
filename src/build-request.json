@@ -1,84 +1,53 @@
 {
   "kind": "build_request",
-  "title": "Fix MP3 uploads in the audio upload system",
+  "title": "Fix playlist creation error for uploaded tracks",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the audio file selection validation so that .mp3 files can be selected and accepted even when the browser reports an empty/unknown MIME type (e.g., file.type is \"\"), while still rejecting clearly non-audio files.",
-      "target": "frontend",
+      "text": "Fix the 'track is not in the media library' error that occurs when creating a playlist after successfully uploading a track. Ensure uploaded tracks are properly registered in the media library before playlist creation attempts.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-last"
         ],
         "quotes": [
-          "The upload system does not allow me to upload mp3 files. Debug the upload system"
+          "when i try to create a playlist, i get a prompt that says track is not in the media library. the track did upload correctly i can confirm."
         ]
       },
       "acceptanceCriteria": [
-        "In MediaUploadDialog, selecting a valid .mp3 file is not blocked by the `file.type.startsWith('audio/')` check when `file.type` is empty/unknown.",
-        "Non-audio files (e.g., .txt) are still rejected with a clear error message.",
-        "The file input accept configuration explicitly includes MP3 support (e.g., includes .mp3 and/or audio/mpeg) and continues to allow other supported audio formats."
+        "After uploading a track, the track is immediately queryable in the media library",
+        "Creating a playlist with the uploaded track completes successfully without 'track is not in the media library' error",
+        "The fix handles race conditions between upload completion and playlist creation"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Make metadata extraction for uploads robust for MP3s: if Web Audio API `decodeAudioData` fails for an MP3, fall back to an alternate duration detection strategy (e.g., HTMLAudioElement metadata loading). If duration still cannot be determined automatically, allow the user to manually enter/edit the track duration in the upload UI and proceed with upload.",
+      "text": "Update the CreatePlaylistFromLibraryDialog component to refresh the media library query after track selection to ensure recently uploaded tracks are available for playlist creation.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "The upload system does not allow me to upload mp3 files. Debug the upload system"
+          "msg-last"
         ]
       },
       "acceptanceCriteria": [
-        "In MediaUploadDialog, MP3 files that fail `decodeAudioData` are still added to the upload queue instead of being dropped with only a generic “Failed to process” error.",
-        "Duration is populated via a fallback method when `decodeAudioData` fails, for common MP3 files.",
-        "If duration cannot be auto-detected, the UI allows manually editing duration (and the upload flow permits uploading with the entered duration).",
-        "Uploading an MP3 from MediaUploadDialog successfully completes and creates a track in the media library."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Verify and, if needed, adjust the backend/blob-storage integration so that storing and serving uploaded MP3 blobs works correctly (including correct handling of audio/mpeg content type where applicable) and does not reject MP3 uploads.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "The upload system does not allow me to upload mp3 files. Debug the upload system"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A successfully uploaded MP3 blob can be stored via the existing `addMediaTrack(..., url: Storage.ExternalBlob)` flow without backend traps or storage-layer rejections specific to MP3.",
-        "If the storage layer requires/uses content type, MP3 uploads are stored/served with an appropriate MP3 MIME type (audio/mpeg) so playback works in the frontend player.",
-        "Backend errors returned for upload failures remain actionable (no silent failures), and frontend receives a meaningful error message if an upload is rejected."
+        "The dialog verifies track availability in the media library before allowing playlist creation",
+        "Users receive clear feedback if a selected track is not yet available in the library",
+        "The component automatically retries library lookup if a track is temporarily unavailable"
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui or any frontend immutablePaths listed in SYSTEM_CONTEXT."
+    "Preserve existing upload validation and metadata extraction logic",
+    "Maintain backward compatibility with existing playlists and tracks"
   ],
   "nonGoals": [
-    "Adding support for new non-audio file types.",
-    "Implementing third-party storage providers or external databases.",
-    "Changing authentication providers (Internet Identity remains the only auth option)."
+    "Redesigning the overall playlist creation workflow",
+    "Changing the media library data structure",
+    "Adding new upload formats or validation rules"
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }
