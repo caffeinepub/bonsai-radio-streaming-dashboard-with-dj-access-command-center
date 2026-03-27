@@ -1,0 +1,53 @@
+{
+  "kind": "build_request",
+  "title": "Fix playlist creation error for uploaded tracks",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Fix the 'track is not in the media library' error that occurs when creating a playlist after successfully uploading a track. Ensure uploaded tracks are properly registered in the media library before playlist creation attempts.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-last"
+        ],
+        "quotes": [
+          "when i try to create a playlist, i get a prompt that says track is not in the media library. the track did upload correctly i can confirm."
+        ]
+      },
+      "acceptanceCriteria": [
+        "After uploading a track, the track is immediately queryable in the media library",
+        "Creating a playlist with the uploaded track completes successfully without 'track is not in the media library' error",
+        "The fix handles race conditions between upload completion and playlist creation"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Update the CreatePlaylistFromLibraryDialog component to refresh the media library query after track selection to ensure recently uploaded tracks are available for playlist creation.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-last"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The dialog verifies track availability in the media library before allowing playlist creation",
+        "Users receive clear feedback if a selected track is not yet available in the library",
+        "The component automatically retries library lookup if a track is temporarily unavailable"
+      ]
+    }
+  ],
+  "constraints": [
+    "Preserve existing upload validation and metadata extraction logic",
+    "Maintain backward compatibility with existing playlists and tracks"
+  ],
+  "nonGoals": [
+    "Redesigning the overall playlist creation workflow",
+    "Changing the media library data structure",
+    "Adding new upload formats or validation rules"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

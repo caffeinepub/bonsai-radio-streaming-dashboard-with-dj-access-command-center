@@ -1,0 +1,28 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Fix playlist creation error for uploaded tracks",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "summary": "Update the CreatePlaylistFromLibraryDialog component to refresh the media library query after track selection to ensure recently uploaded tracks are available for playlist creation",
+      "acceptanceCriteria": [
+        "The dialog verifies track availability in the media library before allowing playlist creation",
+        "Users receive clear feedback if a selected track is not yet available in the library",
+        "The component automatically retries library lookup if a track is temporarily unavailable"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/CreatePlaylistFromLibraryDialog.tsx",
+          "operation": "modify",
+          "description": "Add media library refresh logic before playlist creation to ensure recently uploaded tracks are queryable. Implement track availability verification with user feedback for tracks not yet in the library. Add automatic retry mechanism with exponential backoff for temporarily unavailable tracks. Display loading states and clear error messages when tracks are missing from the library."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add a mutation hook for manually refetching the media library query to support on-demand refresh in the CreatePlaylistFromLibraryDialog. Ensure the query invalidation properly clears stale data and triggers a fresh fetch from the backend."
+        }
+      ]
+    }
+  ]
+}
