@@ -6,7 +6,7 @@ interface HTMLMediaElement {
 
 // Event payload for availability changes
 interface WebKitPlaybackTargetAvailabilityEvent extends Event {
-  availability: 'available' | 'not-available';
+  availability: "available" | "not-available";
 }
 
 interface HTMLMediaElementEventMap {

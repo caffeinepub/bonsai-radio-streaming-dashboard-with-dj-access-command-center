@@ -1,35 +1,49 @@
-import { useState, useRef, useEffect } from 'react';
-import { useGetPlaylists, useGetListenerCount, useIncrementPlayCount } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Play, Pause, Radio, Volume2 } from 'lucide-react';
-import { useAudioAnalyzer } from '../hooks/useAudioAnalyzer';
-import { useAirPlay } from '../hooks/useAirPlay';
-import { useAirPlayPlaybackRecovery } from '../hooks/useAirPlayPlaybackRecovery';
-import { getBufferingConfig, shouldAttemptRecovery, getBufferAheadThreshold } from '../utils/airplayBufferingStrategy';
-import StreamStabilityIndicator from './StreamStabilityIndicator';
-import BackgroundGifOverlay from './BackgroundGifOverlay';
-import AirPlayControl from './AirPlayControl';
-import AirPlayPlaybackAlert from './AirPlayPlaybackAlert';
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Pause, Play, Radio, Volume2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useAirPlay } from "../hooks/useAirPlay";
+import { useAirPlayPlaybackRecovery } from "../hooks/useAirPlayPlaybackRecovery";
+import { useAudioAnalyzer } from "../hooks/useAudioAnalyzer";
+import {
+  useGetListenerCount,
+  useGetPlaylists,
+  useIncrementPlayCount,
+} from "../hooks/useQueries";
+import {
+  getBufferAheadThreshold,
+  getBufferingConfig,
+  shouldAttemptRecovery,
+} from "../utils/airplayBufferingStrategy";
+import AirPlayControl from "./AirPlayControl";
+import AirPlayPlaybackAlert from "./AirPlayPlaybackAlert";
+import BackgroundGifOverlay from "./BackgroundGifOverlay";
+import StreamStabilityIndicator from "./StreamStabilityIndicator";
 
-type BufferState = 'stable' | 'buffering' | 'error';
+type BufferState = "stable" | "buffering" | "error";
 
 export default function EmbeddedMusicPlayer() {
   const { data: playlists = [] } = useGetPlaylists();
   const { data: listenerCount = BigInt(0) } = useGetListenerCount();
   const incrementPlayCount = useIncrementPlayCount();
 
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volumeNormalization, setVolumeNormalization] = useState(false);
-  const [bufferState, setBufferState] = useState<BufferState>('stable');
+  const [bufferState, setBufferState] = useState<BufferState>("stable");
   const [savedPosition, setSavedPosition] = useState(0);
   const [showAirPlayAlert, setShowAirPlayAlert] = useState(false);
   const [isAirPlayRetrying, setIsAirPlayRetrying] = useState(false);
-  
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
@@ -43,7 +57,7 @@ export default function EmbeddedMusicPlayer() {
   const audioData = useAudioAnalyzer(audioRef.current, isPlaying);
   const airPlay = useAirPlay(audioRef.current);
 
-  const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
+  const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
   const currentTrack = selectedPlaylist?.tracks[currentTrackIndex];
   const currentTrackUrl = currentTrack?.audioFile.getDirectURL() || null;
 
@@ -54,7 +68,7 @@ export default function EmbeddedMusicPlayer() {
     isPlaying,
     currentTrackUrl,
     onRecoveryAttempt: () => {
-      setBufferState('stable');
+      setBufferState("stable");
       retryCountRef.current = 0;
       airplayRecoveryAttemptsRef.current = 0;
       setShowAirPlayAlert(false);
@@ -72,25 +86,25 @@ export default function EmbeddedMusicPlayer() {
     if (currentTrack && audioRef.current) {
       const audioUrl = currentTrack.audioFile.getDirectURL();
       const previousSrc = audioRef.current.src;
-      
+
       // Save position before changing source
       if (previousSrc && audioRef.current.currentTime > 0) {
         setSavedPosition(audioRef.current.currentTime);
       }
-      
+
       audioRef.current.src = audioUrl;
-      audioRef.current.preload = 'auto';
-      
+      audioRef.current.preload = "auto";
+
       // Restore position if reloading same track
       if (previousSrc === audioUrl && savedPosition > 0) {
         audioRef.current.currentTime = savedPosition;
       }
-      
+
       if (isPlaying) {
         const playPromise = audioRef.current.play();
         if (playPromise) {
           playPromise.catch((error) => {
-            console.error('Playback error:', error);
+            console.error("Playback error:", error);
             handlePlaybackError();
           });
         }
@@ -108,21 +122,21 @@ export default function EmbeddedMusicPlayer() {
       // Calculate target gain based on current volume with better compression
       const currentLevel = audioData.volume;
       const targetLevel = 0.55;
-      
+
       if (currentLevel > 0.08) {
         const ratio = targetLevel / currentLevel;
-        targetVolumeRef.current = Math.min(2.5, Math.pow(ratio, 0.8));
+        targetVolumeRef.current = Math.min(2.5, ratio ** 0.8);
       }
 
       // Smoother interpolation
       const smoothingFactor = 0.97;
-      currentVolumeRef.current = 
-        currentVolumeRef.current * smoothingFactor + 
+      currentVolumeRef.current =
+        currentVolumeRef.current * smoothingFactor +
         targetVolumeRef.current * (1 - smoothingFactor);
 
       gainNodeRef.current.gain.setValueAtTime(
         currentVolumeRef.current,
-        gainNodeRef.current.context.currentTime
+        gainNodeRef.current.context.currentTime,
       );
     };
 
@@ -139,13 +153,13 @@ export default function EmbeddedMusicPlayer() {
         playPromise
           .then(() => {
             setIsPlaying(true);
-            setBufferState('stable');
+            setBufferState("stable");
             retryCountRef.current = 0;
             airplayRecoveryAttemptsRef.current = 0;
             setShowAirPlayAlert(false);
           })
           .catch((error) => {
-            console.error('Play error:', error);
+            console.error("Play error:", error);
             handlePlaybackError();
           });
       }
@@ -156,33 +170,37 @@ export default function EmbeddedMusicPlayer() {
   };
 
   const handlePlaybackError = () => {
-    setBufferState('error');
-    
+    setBufferState("error");
+
     const config = getBufferingConfig(airPlay.isConnected);
     const maxRetries = config.maxRecoveryAttempts;
-    
+
     if (retryCountRef.current < maxRetries) {
       retryCountRef.current++;
-      
+
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
-      
-      const backoffTime = Math.min(1000 * Math.pow(1.5, retryCountRef.current) + Math.random() * 500, 5000);
-      
+
+      const backoffTime = Math.min(
+        1000 * 1.5 ** retryCountRef.current + Math.random() * 500,
+        5000,
+      );
+
       retryTimeoutRef.current = setTimeout(() => {
         if (audioRef.current && currentTrack) {
           console.log(`Retry attempt ${retryCountRef.current}/${maxRetries}`);
-          
+
           const position = audioRef.current.currentTime;
           setSavedPosition(position);
-          
+
           audioRef.current.volume = 0;
           const audioUrl = currentTrack.audioFile.getDirectURL();
           audioRef.current.src = audioUrl;
           audioRef.current.currentTime = position;
-          
-          audioRef.current.play()
+
+          audioRef.current
+            .play()
             .then(() => {
               let vol = 0;
               const fadeIn = setInterval(() => {
@@ -192,7 +210,7 @@ export default function EmbeddedMusicPlayer() {
                 }
                 if (vol >= 1) {
                   clearInterval(fadeIn);
-                  setBufferState('stable');
+                  setBufferState("stable");
                 }
               }, 40);
             })
@@ -202,9 +220,9 @@ export default function EmbeddedMusicPlayer() {
         }
       }, backoffTime);
     } else {
-      console.error('Max retry attempts reached');
+      console.error("Max retry attempts reached");
       setIsPlaying(false);
-      
+
       // Show AirPlay alert if connected
       if (airPlay.isConnected) {
         setShowAirPlayAlert(true);
@@ -214,33 +232,33 @@ export default function EmbeddedMusicPlayer() {
 
   const handleAirPlayRecovery = () => {
     if (!audioRef.current || !currentTrack) return;
-    
+
     setIsAirPlayRetrying(true);
     airplayRecoveryAttemptsRef.current++;
-    
+
     // Reset retry counters
     retryCountRef.current = 0;
-    
+
     // Save position and reload
     const position = audioRef.current.currentTime;
     setSavedPosition(position);
-    
+
     const audioUrl = currentTrack.audioFile.getDirectURL();
     audioRef.current.src = audioUrl;
     audioRef.current.currentTime = position;
-    
+
     const playPromise = audioRef.current.play();
     if (playPromise) {
       playPromise
         .then(() => {
-          setBufferState('stable');
+          setBufferState("stable");
           setShowAirPlayAlert(false);
           setIsAirPlayRetrying(false);
         })
         .catch((error) => {
-          console.error('AirPlay recovery failed:', error);
+          console.error("AirPlay recovery failed:", error);
           setIsAirPlayRetrying(false);
-          
+
           // Show picker if recovery fails
           if (airPlay.isAvailable) {
             airPlay.showPicker();
@@ -278,21 +296,23 @@ export default function EmbeddedMusicPlayer() {
   };
 
   const handleWaiting = () => {
-    setBufferState('buffering');
-    
+    setBufferState("buffering");
+
     // Start tracking buffering time
     if (!bufferingStartTimeRef.current) {
       bufferingStartTimeRef.current = Date.now();
     }
-    
+
     // Set up AirPlay-specific buffering recovery
     if (airPlay.isConnected && !airplayBufferingTimeoutRef.current) {
       const config = getBufferingConfig(true);
-      
+
       airplayBufferingTimeoutRef.current = setTimeout(() => {
-        if (bufferState === 'buffering' && airPlay.isConnected) {
-          console.log('AirPlay prolonged buffering detected, attempting recovery');
-          
+        if (bufferState === "buffering" && airPlay.isConnected) {
+          console.log(
+            "AirPlay prolonged buffering detected, attempting recovery",
+          );
+
           if (airplayRecoveryAttemptsRef.current < config.maxRecoveryAttempts) {
             handleAirPlayRecovery();
           } else {
@@ -305,10 +325,10 @@ export default function EmbeddedMusicPlayer() {
   };
 
   const handleCanPlay = () => {
-    if (bufferState === 'buffering') {
-      setBufferState('stable');
+    if (bufferState === "buffering") {
+      setBufferState("stable");
       bufferingStartTimeRef.current = null;
-      
+
       // Clear AirPlay buffering timeout
       if (airplayBufferingTimeoutRef.current) {
         clearTimeout(airplayBufferingTimeoutRef.current);
@@ -319,22 +339,27 @@ export default function EmbeddedMusicPlayer() {
 
   const handleProgress = () => {
     if (audioRef.current && audioRef.current.buffered.length > 0) {
-      const bufferedEnd = audioRef.current.buffered.end(audioRef.current.buffered.length - 1);
+      const bufferedEnd = audioRef.current.buffered.end(
+        audioRef.current.buffered.length - 1,
+      );
       const currentTime = audioRef.current.currentTime;
       const bufferAhead = bufferedEnd - currentTime;
-      
+
       // Adaptive buffer threshold based on AirPlay connection
       const bufferThreshold = getBufferAheadThreshold(airPlay.isConnected);
-      
+
       if (bufferAhead < bufferThreshold) {
-        if (bufferState !== 'buffering') {
-          setBufferState('buffering');
+        if (bufferState !== "buffering") {
+          setBufferState("buffering");
           bufferingStartTimeRef.current = Date.now();
         }
-      } else if (bufferState === 'buffering' && bufferAhead > bufferThreshold * 1.5) {
-        setBufferState('stable');
+      } else if (
+        bufferState === "buffering" &&
+        bufferAhead > bufferThreshold * 1.5
+      ) {
+        setBufferState("stable");
         bufferingStartTimeRef.current = null;
-        
+
         // Clear AirPlay buffering timeout
         if (airplayBufferingTimeoutRef.current) {
           clearTimeout(airplayBufferingTimeoutRef.current);
@@ -356,44 +381,49 @@ export default function EmbeddedMusicPlayer() {
   }, []);
 
   // Amplified glow intensity for UI elements
-  const uiGlowIntensity = audioData.isActive 
+  const uiGlowIntensity = audioData.isActive
     ? 30 + audioData.bass * 80 + audioData.bassKick * 60
     : 20;
 
   const uiGlowColor = audioData.isActive
     ? `rgba(236, 72, 153, ${0.5 + audioData.bass * 0.6 + audioData.bassKick * 0.4})`
-    : 'rgba(236, 72, 153, 0.5)';
+    : "rgba(236, 72, 153, 0.5)";
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* AirPlay Alert */}
       {showAirPlayAlert && airPlay.isConnected && (
-        <AirPlayPlaybackAlert 
+        <AirPlayPlaybackAlert
           onRetry={handleAirPlayRecovery}
           isRetrying={isAirPlayRetrying}
         />
       )}
 
       {/* Player Card - Highly transparent with gradient overlay */}
-      <div 
+      <div
         className="relative bg-gradient-to-br from-pink-900/10 to-purple-900/10 backdrop-blur-lg rounded-xl sm:rounded-2xl border-2 border-pink-500/50 shadow-xl shadow-pink-500/20 p-4 sm:p-6 md:p-8 audio-reactive-panel transition-all duration-200 overflow-hidden touch-manipulation"
         style={{
-          boxShadow: audioData.isActive 
+          boxShadow: audioData.isActive
             ? `0 0 ${uiGlowIntensity}px ${uiGlowColor}, 0 0 ${uiGlowIntensity * 1.5}px ${uiGlowColor}`
             : undefined,
-          pointerEvents: 'auto',
+          pointerEvents: "auto",
         }}
       >
         {/* Background GIF Overlay */}
-        <BackgroundGifOverlay currentTrackTitle={currentTrack?.title} isPlaying={isPlaying} />
+        <BackgroundGifOverlay
+          currentTrackTitle={currentTrack?.title}
+          isPlaying={isPlaying}
+        />
 
-        <div 
+        <div
           className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-pink-500/8 to-purple-500/8 audio-reactive-pulse transition-opacity duration-200"
           style={{
-            opacity: audioData.isActive ? 0.3 + audioData.volume * 0.8 + audioData.bassKick * 0.3 : 0.2,
+            opacity: audioData.isActive
+              ? 0.3 + audioData.volume * 0.8 + audioData.bassKick * 0.3
+              : 0.2,
           }}
         />
-        
+
         <div className="relative z-10 space-y-4 sm:space-y-6">
           {/* Header with Stream Status */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
@@ -404,7 +434,10 @@ export default function EmbeddedMusicPlayer() {
             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
               <StreamStabilityIndicator state={bufferState} />
               <div className="text-xs sm:text-sm font-mono text-gray-300">
-                Listeners: <span className="text-pink-400 font-bold">{listenerCount.toString()}</span>
+                Listeners:{" "}
+                <span className="text-pink-400 font-bold">
+                  {listenerCount.toString()}
+                </span>
               </div>
             </div>
           </div>
@@ -414,7 +447,10 @@ export default function EmbeddedMusicPlayer() {
             <label className="text-xs sm:text-sm font-mono text-pink-400 uppercase tracking-wider">
               Select Channel
             </label>
-            <Select value={selectedPlaylistId} onValueChange={handlePlaylistChange}>
+            <Select
+              value={selectedPlaylistId}
+              onValueChange={handlePlaylistChange}
+            >
               <SelectTrigger className="w-full bg-black/60 border-pink-500/50 text-white hover:border-pink-500 transition-colors audio-reactive-border h-10 sm:h-11 text-sm sm:text-base">
                 <SelectValue placeholder="Choose a playlist" />
               </SelectTrigger>
@@ -436,7 +472,10 @@ export default function EmbeddedMusicPlayer() {
           <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-black/40 border border-pink-500/30">
             <div className="flex items-center gap-2">
               <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-400 flex-shrink-0" />
-              <Label htmlFor="volume-norm-embedded" className="text-xs sm:text-sm font-mono text-pink-400 cursor-pointer">
+              <Label
+                htmlFor="volume-norm-embedded"
+                className="text-xs sm:text-sm font-mono text-pink-400 cursor-pointer"
+              >
                 Auto Volume Normalization
               </Label>
             </div>
@@ -476,12 +515,13 @@ export default function EmbeddedMusicPlayer() {
                   size="lg"
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-xl shadow-pink-500/50 transition-all duration-200 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed audio-reactive-button flex-shrink-0 touch-manipulation self-center sm:self-start"
                   style={{
-                    boxShadow: audioData.isActive 
+                    boxShadow: audioData.isActive
                       ? `0 0 ${40 + audioData.bass * 80 + audioData.bassKick * 60}px rgba(236, 72, 153, ${0.6 + audioData.bass * 0.6 + audioData.bassKick * 0.4})`
                       : undefined,
-                    transform: audioData.isActive && audioData.bassKick > 0.5
-                      ? `scale(${1.05 + audioData.bassKick * 0.1})`
-                      : undefined,
+                    transform:
+                      audioData.isActive && audioData.bassKick > 0.5
+                        ? `scale(${1.05 + audioData.bassKick * 0.1})`
+                        : undefined,
                   }}
                 >
                   {isPlaying ? (
@@ -518,10 +558,10 @@ export default function EmbeddedMusicPlayer() {
 
       {/* Track List */}
       {selectedPlaylist && selectedPlaylist.tracks.length > 0 && (
-        <div 
+        <div
           className="bg-black/30 backdrop-blur-md rounded-xl border border-pink-500/30 p-4 sm:p-6 audio-reactive-panel transition-all duration-200"
           style={{
-            boxShadow: audioData.isActive 
+            boxShadow: audioData.isActive
               ? `0 0 ${uiGlowIntensity * 0.5}px rgba(236, 72, 153, ${0.3 + audioData.mid * 0.5})`
               : undefined,
           }}
@@ -535,8 +575,8 @@ export default function EmbeddedMusicPlayer() {
                 key={index}
                 className={`p-2.5 sm:p-3 rounded-lg transition-all duration-200 ${
                   index === currentTrackIndex
-                    ? 'bg-pink-500/30 border border-pink-500/50 audio-reactive-border'
-                    : 'bg-white/5 hover:bg-white/10 active:bg-white/15'
+                    ? "bg-pink-500/30 border border-pink-500/50 audio-reactive-border"
+                    : "bg-white/5 hover:bg-white/10 active:bg-white/15"
                 }`}
                 style={
                   index === currentTrackIndex && audioData.isActive
@@ -548,11 +588,16 @@ export default function EmbeddedMusicPlayer() {
               >
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm sm:text-base font-semibold text-white truncate">{track.title}</p>
-                    <p className="text-xs sm:text-sm text-gray-400 truncate">{track.artist}</p>
+                    <p className="text-sm sm:text-base font-semibold text-white truncate">
+                      {track.title}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-400 truncate">
+                      {track.artist}
+                    </p>
                   </div>
                   <div className="text-xs text-gray-500 font-mono flex-shrink-0">
-                    {Math.floor(Number(track.duration) / 60)}:{String(Number(track.duration) % 60).padStart(2, '0')}
+                    {Math.floor(Number(track.duration) / 60)}:
+                    {String(Number(track.duration) % 60).padStart(2, "0")}
                   </div>
                 </div>
               </div>

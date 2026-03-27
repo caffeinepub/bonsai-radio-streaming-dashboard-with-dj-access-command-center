@@ -1,30 +1,50 @@
-import { useState } from 'react';
-import { useGetMediaLibrary, useDeleteTrack } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Upload, Search, Edit, Trash2, Music, Clock, Calendar, ListPlus, FolderPlus } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
-import MediaUploadDialog from './MediaUploadDialog';
-import EditTrackDialog from './EditTrackDialog';
-import BatchEditTrackDialog from './BatchEditTrackDialog';
-import AddToPlaylistDialog from './AddToPlaylistDialog';
-import CreatePlaylistFromLibraryDialog from './CreatePlaylistFromLibraryDialog';
-import type { Track } from '../backend';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Calendar,
+  Clock,
+  Edit,
+  FolderPlus,
+  ListPlus,
+  Music,
+  Search,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Track } from "../backend";
+import { useDeleteTrack, useGetMediaLibrary } from "../hooks/useQueries";
+import AddToPlaylistDialog from "./AddToPlaylistDialog";
+import BatchEditTrackDialog from "./BatchEditTrackDialog";
+import CreatePlaylistFromLibraryDialog from "./CreatePlaylistFromLibraryDialog";
+import EditTrackDialog from "./EditTrackDialog";
+import MediaUploadDialog from "./MediaUploadDialog";
 
 export default function MediaLibrary() {
   const { data: tracks = [], isLoading } = useGetMediaLibrary();
   const deleteTrack = useDeleteTrack();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [showCreatePlaylistDialog, setShowCreatePlaylistDialog] = useState(false);
+  const [showCreatePlaylistDialog, setShowCreatePlaylistDialog] =
+    useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [addingTrack, setAddingTrack] = useState<Track | null>(null);
-  const [sortBy, setSortBy] = useState<'title' | 'artist' | 'uploadDate'>('uploadDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  
+  const [sortBy, setSortBy] = useState<"title" | "artist" | "uploadDate">(
+    "uploadDate",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
   // Multi-select state - now using track.id instead of track.title
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [showBatchEdit, setShowBatchEdit] = useState(false);
@@ -42,14 +62,14 @@ export default function MediaLibrary() {
 
   const sortedTracks = [...filteredTracks].sort((a, b) => {
     let comparison = 0;
-    if (sortBy === 'title') {
+    if (sortBy === "title") {
       comparison = a.title.localeCompare(b.title);
-    } else if (sortBy === 'artist') {
+    } else if (sortBy === "artist") {
       comparison = a.artist.localeCompare(b.artist);
-    } else if (sortBy === 'uploadDate') {
+    } else if (sortBy === "uploadDate") {
       comparison = Number(a.uploadDate) - Number(b.uploadDate);
     }
-    return sortOrder === 'asc' ? comparison : -comparison;
+    return sortOrder === "asc" ? comparison : -comparison;
   });
 
   const handleDelete = async (trackId: string, trackTitle: string) => {
@@ -57,40 +77,40 @@ export default function MediaLibrary() {
 
     try {
       await deleteTrack.mutateAsync(trackId);
-      toast.success('Track deleted successfully');
+      toast.success("Track deleted successfully");
       setSelectedTracks((prev) => {
         const newSet = new Set(prev);
         newSet.delete(trackId);
         return newSet;
       });
     } catch (error: any) {
-      console.error('Error deleting track:', error);
-      toast.error(error.message || 'Failed to delete track');
+      console.error("Error deleting track:", error);
+      toast.error(error.message || "Failed to delete track");
     }
   };
 
   const formatDuration = (seconds: bigint) => {
     const mins = Math.floor(Number(seconds) / 60);
     const secs = Number(seconds) % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const formatDate = (timestamp: bigint) => {
-    if (timestamp === BigInt(0)) return 'Recently';
+    if (timestamp === BigInt(0)) return "Recently";
     try {
       const date = new Date(Number(timestamp) / 1000000);
       return date.toLocaleDateString();
     } catch {
-      return 'Recently';
+      return "Recently";
     }
   };
 
-  const toggleSort = (field: 'title' | 'artist' | 'uploadDate') => {
+  const toggleSort = (field: "title" | "artist" | "uploadDate") => {
     if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortBy(field);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
@@ -116,7 +136,7 @@ export default function MediaLibrary() {
 
   const handleBatchAddToPlaylist = () => {
     if (selectedTracks.size === 0) {
-      toast.error('Please select at least one track');
+      toast.error("Please select at least one track");
       return;
     }
     setShowBatchAddToPlaylist(true);
@@ -124,7 +144,7 @@ export default function MediaLibrary() {
 
   const handleBatchEdit = () => {
     if (selectedTracks.size === 0) {
-      toast.error('Please select at least one track');
+      toast.error("Please select at least one track");
       return;
     }
     setShowBatchEdit(true);
@@ -134,8 +154,10 @@ export default function MediaLibrary() {
     return tracks.filter((track) => selectedTracks.has(track.id));
   };
 
-  const allSelected = sortedTracks.length > 0 && selectedTracks.size === sortedTracks.length;
-  const someSelected = selectedTracks.size > 0 && selectedTracks.size < sortedTracks.length;
+  const allSelected =
+    sortedTracks.length > 0 && selectedTracks.size === sortedTracks.length;
+  const someSelected =
+    selectedTracks.size > 0 && selectedTracks.size < sortedTracks.length;
 
   return (
     <div className="space-y-6">
@@ -174,7 +196,8 @@ export default function MediaLibrary() {
           <div className="flex items-center gap-3">
             <div className="bg-neon-cyan/20 rounded-full px-4 py-2 border border-neon-cyan/50">
               <span className="text-neon-cyan font-bold font-mono">
-                {selectedTracks.size} track{selectedTracks.size > 1 ? 's' : ''} selected
+                {selectedTracks.size} track{selectedTracks.size > 1 ? "s" : ""}{" "}
+                selected
               </span>
             </div>
           </div>
@@ -221,7 +244,10 @@ export default function MediaLibrary() {
             <div>
               <p className="text-sm text-gray-400 font-mono">Total Duration</p>
               <p className="text-2xl font-bold text-white">
-                {Math.floor(tracks.reduce((sum, t) => sum + Number(t.duration), 0) / 60)} min
+                {Math.floor(
+                  tracks.reduce((sum, t) => sum + Number(t.duration), 0) / 60,
+                )}{" "}
+                min
               </p>
             </div>
           </div>
@@ -231,7 +257,9 @@ export default function MediaLibrary() {
             <Calendar className="w-8 h-8 text-green-500" />
             <div>
               <p className="text-sm text-gray-400 font-mono">Available</p>
-              <p className="text-2xl font-bold text-green-500">{filteredTracks.length}</p>
+              <p className="text-2xl font-bold text-green-500">
+                {filteredTracks.length}
+              </p>
             </div>
           </div>
         </div>
@@ -240,15 +268,19 @@ export default function MediaLibrary() {
       {/* Tracks Table */}
       <div className="bg-black/40 rounded-lg border border-neon-cyan/30 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-400">Loading media library...</div>
+          <div className="p-8 text-center text-gray-400">
+            Loading media library...
+          </div>
         ) : sortedTracks.length === 0 ? (
           <div className="p-8 text-center">
             <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400 mb-2">
-              {searchTerm ? 'No tracks found matching your search' : 'No tracks in media library'}
+              {searchTerm
+                ? "No tracks found matching your search"
+                : "No tracks in media library"}
             </p>
             <p className="text-sm text-gray-500">
-              {!searchTerm && 'Upload audio files to get started'}
+              {!searchTerm && "Upload audio files to get started"}
             </p>
           </div>
         ) : (
@@ -271,26 +303,38 @@ export default function MediaLibrary() {
                   </TableHead>
                   <TableHead
                     className="text-neon-cyan font-mono cursor-pointer hover:text-neon-purple transition-colors"
-                    onClick={() => toggleSort('title')}
+                    onClick={() => toggleSort("title")}
                   >
-                    Title {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    Title{" "}
+                    {sortBy === "title" && (sortOrder === "asc" ? "↑" : "↓")}
                   </TableHead>
                   <TableHead
                     className="text-neon-cyan font-mono cursor-pointer hover:text-neon-purple transition-colors"
-                    onClick={() => toggleSort('artist')}
+                    onClick={() => toggleSort("artist")}
                   >
-                    Artist {sortBy === 'artist' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    Artist{" "}
+                    {sortBy === "artist" && (sortOrder === "asc" ? "↑" : "↓")}
                   </TableHead>
-                  <TableHead className="text-neon-cyan font-mono">Album</TableHead>
-                  <TableHead className="text-neon-cyan font-mono">Duration</TableHead>
+                  <TableHead className="text-neon-cyan font-mono">
+                    Album
+                  </TableHead>
+                  <TableHead className="text-neon-cyan font-mono">
+                    Duration
+                  </TableHead>
                   <TableHead
                     className="text-neon-cyan font-mono cursor-pointer hover:text-neon-purple transition-colors"
-                    onClick={() => toggleSort('uploadDate')}
+                    onClick={() => toggleSort("uploadDate")}
                   >
-                    Upload Date {sortBy === 'uploadDate' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    Upload Date{" "}
+                    {sortBy === "uploadDate" &&
+                      (sortOrder === "asc" ? "↑" : "↓")}
                   </TableHead>
-                  <TableHead className="text-neon-cyan font-mono">Status</TableHead>
-                  <TableHead className="text-neon-cyan font-mono text-right">Actions</TableHead>
+                  <TableHead className="text-neon-cyan font-mono">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-neon-cyan font-mono text-right">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -298,20 +342,28 @@ export default function MediaLibrary() {
                   <TableRow
                     key={track.id}
                     className={`border-neon-purple/20 hover:bg-neon-purple/10 transition-colors ${
-                      selectedTracks.has(track.id) ? 'bg-neon-cyan/10' : ''
+                      selectedTracks.has(track.id) ? "bg-neon-cyan/10" : ""
                     }`}
                   >
                     <TableCell>
                       <Checkbox
                         checked={selectedTracks.has(track.id)}
-                        onCheckedChange={(checked) => handleSelectTrack(track.id, checked as boolean)}
+                        onCheckedChange={(checked) =>
+                          handleSelectTrack(track.id, checked as boolean)
+                        }
                         className="border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
                         aria-label={`Select ${track.title}`}
                       />
                     </TableCell>
-                    <TableCell className="font-medium text-white">{track.title}</TableCell>
-                    <TableCell className="text-gray-300">{track.artist}</TableCell>
-                    <TableCell className="text-gray-400">{track.album || '—'}</TableCell>
+                    <TableCell className="font-medium text-white">
+                      {track.title}
+                    </TableCell>
+                    <TableCell className="text-gray-300">
+                      {track.artist}
+                    </TableCell>
+                    <TableCell className="text-gray-400">
+                      {track.album || "—"}
+                    </TableCell>
                     <TableCell className="text-gray-300 font-mono">
                       {formatDuration(track.duration)}
                     </TableCell>
@@ -367,7 +419,10 @@ export default function MediaLibrary() {
       </div>
 
       {/* Dialogs */}
-      <MediaUploadDialog open={showUploadDialog} onOpenChange={setShowUploadDialog} />
+      <MediaUploadDialog
+        open={showUploadDialog}
+        onOpenChange={setShowUploadDialog}
+      />
       <CreatePlaylistFromLibraryDialog
         open={showCreatePlaylistDialog}
         onOpenChange={setShowCreatePlaylistDialog}
@@ -390,7 +445,13 @@ export default function MediaLibrary() {
         />
       )}
       <AddToPlaylistDialog
-        tracks={addingTrack ? [addingTrack] : showBatchAddToPlaylist ? getSelectedTracksData() : []}
+        tracks={
+          addingTrack
+            ? [addingTrack]
+            : showBatchAddToPlaylist
+              ? getSelectedTracksData()
+              : []
+        }
         open={!!addingTrack || showBatchAddToPlaylist}
         onOpenChange={(open) => {
           if (!open) {

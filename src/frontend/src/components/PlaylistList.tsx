@@ -1,5 +1,5 @@
-import { Music, Clock } from 'lucide-react';
-import type { Playlist } from '../backend';
+import { Clock, Music } from "lucide-react";
+import type { Playlist } from "../backend";
 
 interface PlaylistListProps {
   playlists: Playlist[];
@@ -24,9 +24,12 @@ export default function PlaylistList({ playlists }: PlaylistListProps) {
         >
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-xl font-bold text-neon-cyan mb-1">{playlist.id}</h3>
+              <h3 className="text-xl font-bold text-neon-cyan mb-1">
+                {playlist.id}
+              </h3>
               <p className="text-sm text-gray-400 font-mono">
-                {playlist.tracks.length} track{playlist.tracks.length !== 1 ? 's' : ''}
+                {playlist.tracks.length} track
+                {playlist.tracks.length !== 1 ? "s" : ""}
               </p>
             </div>
             <div className="flex items-center gap-2 text-neon-purple">
@@ -41,16 +44,25 @@ export default function PlaylistList({ playlists }: PlaylistListProps) {
                 className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white truncate">{track.title}</p>
-                  <p className="text-sm text-gray-400 truncate">{track.artist}</p>
+                  <p className="font-semibold text-white truncate">
+                    {track.title}
+                  </p>
+                  <p className="text-sm text-gray-400 truncate">
+                    {track.artist}
+                  </p>
                   {track.album && (
-                    <p className="text-xs text-gray-500 truncate">{track.album}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {track.album}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-4 ml-4">
                   <div className="flex items-center gap-1 text-sm text-gray-400">
                     <Clock className="w-4 h-4" />
-                    <span>{Math.floor(Number(track.duration) / 60)}:{String(Number(track.duration) % 60).padStart(2, '0')}</span>
+                    <span>
+                      {Math.floor(Number(track.duration) / 60)}:
+                      {String(Number(track.duration) % 60).padStart(2, "0")}
+                    </span>
                   </div>
                   <div className="text-sm text-neon-purple font-mono">
                     {track.playCount.toString()} plays

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface UseAirPlayPlaybackRecoveryProps {
   audioElement: HTMLAudioElement | null;
@@ -22,13 +22,18 @@ export function useAirPlayPlaybackRecovery({
   useEffect(() => {
     // Detect connection state changes
     if (previousConnectionState.current !== isConnected) {
-      const wasConnected = previousConnectionState.current;
-      const nowConnected = isConnected;
-      
+      const _wasConnected = previousConnectionState.current;
+      const _nowConnected = isConnected;
+
       previousConnectionState.current = isConnected;
 
       // Only attempt recovery if we were playing and the connection state changed
-      if (isPlaying && audioElement && currentTrackUrl && !isRecovering.current) {
+      if (
+        isPlaying &&
+        audioElement &&
+        currentTrackUrl &&
+        !isRecovering.current
+      ) {
         // Clear any pending recovery
         if (recoveryTimeout.current) {
           clearTimeout(recoveryTimeout.current);
@@ -68,11 +73,11 @@ export function useAirPlayPlaybackRecovery({
             if (playPromise) {
               playPromise
                 .then(() => {
-                  console.log('AirPlay route change recovery successful');
+                  console.log("AirPlay route change recovery successful");
                   onRecoveryAttempt();
                 })
                 .catch((error) => {
-                  console.error('AirPlay recovery playback error:', error);
+                  console.error("AirPlay recovery playback error:", error);
                   onRecoveryAttempt();
                 })
                 .finally(() => {
@@ -82,13 +87,19 @@ export function useAirPlayPlaybackRecovery({
               isRecovering.current = false;
             }
           } catch (error) {
-            console.error('AirPlay recovery error:', error);
+            console.error("AirPlay recovery error:", error);
             isRecovering.current = false;
           }
         }, 500); // 500ms delay to allow route change to settle
       }
     }
-  }, [isConnected, isPlaying, audioElement, currentTrackUrl, onRecoveryAttempt]);
+  }, [
+    isConnected,
+    isPlaying,
+    audioElement,
+    currentTrackUrl,
+    onRecoveryAttempt,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {

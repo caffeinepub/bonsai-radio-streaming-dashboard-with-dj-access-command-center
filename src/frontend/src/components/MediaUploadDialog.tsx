@@ -1,16 +1,37 @@
-import { useState, useEffect } from 'react';
-import { useAddMediaTrack } from '../hooks/useQueries';
-import { useUploadSystemReadiness } from '../hooks/useUploadSystemReadiness';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, X, CheckCircle, XCircle, Loader2, AlertCircle, Clock } from 'lucide-react';
-import { ExternalBlob } from '../backend';
-import { toast } from 'sonner';
-import { isValidAudioFile, extractAudioDuration, parseDurationString, formatDuration } from '../utils/audioFileUtils';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Loader2,
+  RefreshCw,
+  Upload,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { ExternalBlob } from "../backend";
+import { useAddMediaTrack } from "../hooks/useQueries";
+import { useUploadSystemReadiness } from "../hooks/useUploadSystemReadiness";
+import {
+  extractAudioDuration,
+  formatDuration,
+  isValidAudioFile,
+  parseDurationString,
+} from "../utils/audioFileUtils";
 
 interface UploadingTrack {
   id: string;
@@ -21,7 +42,7 @@ interface UploadingTrack {
   duration: number;
   durationManuallySet: boolean;
   uploadProgress: number;
-  uploadStatus: 'pending' | 'uploading' | 'complete' | 'error' | 'queued';
+  uploadStatus: "pending" | "uploading" | "complete" | "error" | "queued";
   errorMessage?: string;
   trackId?: string;
 }
@@ -31,23 +52,41 @@ interface MediaUploadDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDialogProps) {
+export default function MediaUploadDialog({
+  open,
+  onOpenChange,
+}: MediaUploadDialogProps) {
   const [tracks, setTracks] = useState<UploadingTrack[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const addMediaTrack = useAddMediaTrack();
-  
-  // Check upload system readiness when dialog opens
-  const { data: readiness, isLoading: checkingReadiness } = useUploadSystemReadiness(open);
+  const queryClient = useQueryClient();
 
-  // Auto-retry queued uploads when system becomes ready
+  // Check upload system readiness when dialog opens
+  const { data: readiness, isLoading: checkingReadiness } =
+    useUploadSystemReadiness(open);
+
+  // Keep refs so the canUpload effect can read latest values without
+  // needing them as trigger dependencies.
+  const tracksRef = useRef(tracks);
+  tracksRef.current = tracks;
+  const isUploadingRef = useRef(isUploading);
+  isUploadingRef.current = isUploading;
+
+  // Auto-retry queued uploads when system becomes ready.
+  // We intentionally only trigger on canUpload changes; we read tracks and
+  // isUploading via refs to avoid spurious retries on every state update.
   useEffect(() => {
-    if (readiness?.canUpload && !isUploading) {
-      const queuedTracks = tracks.filter((t) => t.uploadStatus === 'queued');
-      if (queuedTracks.length > 0) {
-        toast.info('Upload system ready! Retrying queued uploads...');
-        handleRetryQueued();
+    if (readiness?.canUpload && !isUploadingRef.current) {
+      const queued = tracksRef.current.filter(
+        (t) => t.uploadStatus === "queued",
+      );
+      if (queued.length > 0) {
+        toast.info("Upload system ready! Retrying queued uploads...");
+        // Call handleRetryQueued via the ref so it always uses current state.
+        handleRetryQueuedRef.current();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readiness?.canUpload]);
 
   const handleFileSelect = async (files: FileList | null) => {
@@ -57,11 +96,13 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
+
       // Validate file type (checks both MIME type and extension)
       const validation = isValidAudioFile(file);
       if (!validation.valid) {
-        toast.error(validation.reason || `${file.name} is not a supported audio file`);
+        toast.error(
+          validation.reason || `${file.name} is not a supported audio file`,
+        );
         continue;
       }
 
@@ -70,25 +111,25 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
         const duration = await extractAudioDuration(file);
 
         // Try to extract metadata from file name
-        const fileName = file.name.replace(/\.[^/.]+$/, '');
-        const parts = fileName.split(' - ');
+        const fileName = file.name.replace(/\.[^/.]+$/, "");
+        const parts = fileName.split(" - ");
 
         newTracks.push({
           id: crypto.randomUUID(),
           file,
           title: parts.length > 1 ? parts[1].trim() : fileName,
-          artist: parts.length > 1 ? parts[0].trim() : 'Unknown Artist',
-          album: '',
+          artist: parts.length > 1 ? parts[0].trim() : "Unknown Artist",
+          album: "",
           duration: duration || 0,
           durationManuallySet: false,
           uploadProgress: 0,
-          uploadStatus: 'pending',
+          uploadStatus: "pending",
         });
 
         // Show warning if duration couldn't be detected
         if (!duration || duration === 0) {
           toast.warning(`Could not detect duration for ${file.name}`, {
-            description: 'Please enter the duration manually',
+            description: "Please enter the duration manually",
           });
         }
       } catch (error) {
@@ -101,7 +142,9 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
   };
 
   const updateTrack = (id: string, updates: Partial<UploadingTrack>) => {
-    setTracks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+    setTracks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+    );
   };
 
   const removeTrack = (id: string) => {
@@ -109,15 +152,17 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
   };
 
   const uploadTrack = async (track: UploadingTrack): Promise<boolean> => {
-    updateTrack(track.id, { uploadStatus: 'uploading', uploadProgress: 0 });
+    updateTrack(track.id, { uploadStatus: "uploading", uploadProgress: 0 });
 
     try {
       const arrayBuffer = await track.file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
 
-      const blob = ExternalBlob.fromBytes(uint8Array).withUploadProgress((percentage) => {
-        updateTrack(track.id, { uploadProgress: percentage });
-      });
+      const blob = ExternalBlob.fromBytes(uint8Array).withUploadProgress(
+        (percentage) => {
+          updateTrack(track.id, { uploadProgress: percentage });
+        },
+      );
 
       // Add to backend and get the stable track ID
       const addedTrack = await addMediaTrack.mutateAsync({
@@ -128,39 +173,45 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
         url: blob,
       });
 
-      updateTrack(track.id, { 
-        uploadStatus: 'complete', 
+      updateTrack(track.id, {
+        uploadStatus: "complete",
         uploadProgress: 100,
         trackId: addedTrack.id,
       });
       return true;
     } catch (error: any) {
-      console.error('Upload error:', error);
-      
-      const errorMessage = error.message || 'Upload failed';
-      
+      console.error("Upload error:", error);
+
+      const errorMessage = error.message || "Upload failed";
+
       // Check if it's a system initialization error
-      if (errorMessage.includes('initializing') || errorMessage.includes('not ready')) {
+      if (
+        errorMessage.includes("initializing") ||
+        errorMessage.includes("not ready")
+      ) {
         updateTrack(track.id, {
-          uploadStatus: 'queued',
+          uploadStatus: "queued",
           uploadProgress: 0,
-          errorMessage: 'Queued - will retry when system is ready',
+          errorMessage: "Queued - will retry when system is ready",
         });
         return false;
       }
-      
+
       // Check if it's an authorization error
-      if (errorMessage.includes('permission') || errorMessage.includes('Unauthorized')) {
+      if (
+        errorMessage.includes("permission") ||
+        errorMessage.includes("Unauthorized")
+      ) {
         updateTrack(track.id, {
-          uploadStatus: 'error',
+          uploadStatus: "error",
           uploadProgress: 0,
-          errorMessage: 'You do not have permission to upload tracks',
+          errorMessage: "You do not have permission to upload tracks",
         });
         return false;
       }
-      
+
       updateTrack(track.id, {
-        uploadStatus: 'error',
+        uploadStatus: "error",
         uploadProgress: 0,
         errorMessage,
       });
@@ -169,23 +220,29 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
   };
 
   const handleUploadAll = async () => {
-    const pendingTracks = tracks.filter((t) => t.uploadStatus === 'pending' || t.uploadStatus === 'error');
-    
+    const pendingTracks = tracks.filter(
+      (t) => t.uploadStatus === "pending" || t.uploadStatus === "error",
+    );
+
     if (pendingTracks.length === 0) {
-      toast.error('No tracks to upload');
+      toast.error("No tracks to upload");
       return;
     }
 
     // Check readiness before starting
     if (!readiness?.canUpload) {
-      toast.error(readiness?.message || 'Upload system not ready');
+      toast.error(readiness?.message || "Upload system not ready");
       return;
     }
 
     // Validate all tracks have required fields
-    const invalidTracks = pendingTracks.filter((t) => !t.title || !t.artist || t.duration === 0);
+    const invalidTracks = pendingTracks.filter(
+      (t) => !t.title || !t.artist || t.duration === 0,
+    );
     if (invalidTracks.length > 0) {
-      toast.error('Please fill in all track details and ensure duration is set');
+      toast.error(
+        "Please fill in all track details and ensure duration is set",
+      );
       return;
     }
 
@@ -199,16 +256,18 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
     const batchSize = 3;
     for (let i = 0; i < pendingTracks.length; i += batchSize) {
       const batch = pendingTracks.slice(i, i + batchSize);
-      const results = await Promise.all(batch.map((track) => uploadTrack(track)));
+      const results = await Promise.all(
+        batch.map((track) => uploadTrack(track)),
+      );
       successCount += results.filter((r) => r).length;
-      
+
       // Count queued vs failed
       const failedInBatch = results.filter((r) => !r).length;
       const queuedInBatch = batch.filter((t) => {
         const currentTrack = tracks.find((tr) => tr.id === t.id);
-        return currentTrack?.uploadStatus === 'queued';
+        return currentTrack?.uploadStatus === "queued";
       }).length;
-      
+
       queuedCount += queuedInBatch;
       failCount += failedInBatch - queuedInBatch;
     }
@@ -220,7 +279,7 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
     }
     if (queuedCount > 0) {
       toast.warning(`${queuedCount} track(s) queued for retry`, {
-        description: 'Will retry automatically when system is ready',
+        description: "Will retry automatically when system is ready",
       });
     }
     if (failCount > 0) {
@@ -237,8 +296,10 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
   };
 
   const handleRetryQueued = async () => {
-    const queuedTracks = tracks.filter((t) => t.uploadStatus === 'queued');
-    
+    const queuedTracks = tracksRef.current.filter(
+      (t) => t.uploadStatus === "queued",
+    );
+
     if (queuedTracks.length === 0) return;
 
     setIsUploading(true);
@@ -250,11 +311,15 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
     setIsUploading(false);
   };
 
+  // Stable ref so the canUpload effect always calls the latest version.
+  const handleRetryQueuedRef = useRef(handleRetryQueued);
+  handleRetryQueuedRef.current = handleRetryQueued;
+
   const handleRetryFailed = async () => {
-    const failedTracks = tracks.filter((t) => t.uploadStatus === 'error');
-    
+    const failedTracks = tracks.filter((t) => t.uploadStatus === "error");
+
     if (failedTracks.length === 0) {
-      toast.error('No failed tracks to retry');
+      toast.error("No failed tracks to retry");
       return;
     }
 
@@ -275,26 +340,33 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
 
   const handleClose = () => {
     if (isUploading) {
-      if (!confirm('Upload in progress. Are you sure you want to close?')) return;
+      if (!confirm("Upload in progress. Are you sure you want to close?"))
+        return;
     }
     setTracks([]);
     onOpenChange(false);
   };
 
-  const completedCount = tracks.filter((t) => t.uploadStatus === 'complete').length;
-  const queuedCount = tracks.filter((t) => t.uploadStatus === 'queued').length;
-  const failedCount = tracks.filter((t) => t.uploadStatus === 'error').length;
+  const handleCheckAgain = () => {
+    queryClient.invalidateQueries({ queryKey: ["uploadSystemReadiness"] });
+  };
+
+  const completedCount = tracks.filter(
+    (t) => t.uploadStatus === "complete",
+  ).length;
+  const queuedCount = tracks.filter((t) => t.uploadStatus === "queued").length;
+  const failedCount = tracks.filter((t) => t.uploadStatus === "error").length;
   const totalCount = tracks.length;
 
-  const getStatusIcon = (status: UploadingTrack['uploadStatus']) => {
+  const getStatusIcon = (status: UploadingTrack["uploadStatus"]) => {
     switch (status) {
-      case 'complete':
+      case "complete":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'error':
+      case "error":
         return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'uploading':
+      case "uploading":
         return <Loader2 className="w-5 h-5 text-neon-cyan animate-spin" />;
-      case 'queued':
+      case "queued":
         return <Clock className="w-5 h-5 text-yellow-500" />;
       default:
         return <AlertCircle className="w-5 h-5 text-gray-400" />;
@@ -316,7 +388,7 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
     if (!readiness) return null;
 
     switch (readiness.status) {
-      case 'ready':
+      case "ready":
         return (
           <Alert className="border-green-500/50 bg-green-500/10">
             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -325,16 +397,29 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
             </AlertDescription>
           </Alert>
         );
-      case 'initializing':
+      case "initializing":
         return (
           <Alert className="border-yellow-500/50 bg-yellow-500/10">
-            <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
-            <AlertDescription className="text-white ml-2">
-              {readiness.message}
+            <Loader2 className="h-4 w-4 animate-spin text-yellow-500 shrink-0" />
+            <AlertDescription className="text-white ml-2 flex flex-col gap-2">
+              <span>
+                Blob storage account is being set up. This may take a moment —
+                please check back shortly.
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCheckAgain}
+                className="self-start border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 gap-1"
+                data-ocid="upload.check_again.button"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Check Again
+              </Button>
             </AlertDescription>
           </Alert>
         );
-      case 'unauthorized':
+      case "unauthorized":
         return (
           <Alert className="border-red-500/50 bg-red-500/10">
             <XCircle className="h-4 w-4 text-red-500" />
@@ -343,7 +428,7 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
             </AlertDescription>
           </Alert>
         );
-      case 'unavailable':
+      case "unavailable":
         return (
           <Alert className="border-orange-500/50 bg-orange-500/10">
             <AlertCircle className="h-4 w-4 text-orange-500" />
@@ -387,13 +472,19 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
             <Label
               htmlFor="audio-upload"
               className={`cursor-pointer flex flex-col items-center gap-3 ${
-                !readiness?.canUpload || isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                !readiness?.canUpload || isUploading
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
               }`}
             >
               <Upload className="w-12 h-12 text-neon-cyan" />
               <div>
-                <p className="text-lg font-semibold text-white">Click to select audio files</p>
-                <p className="text-sm text-gray-400 mt-1">or drag and drop (MP3, WAV, FLAC, M4A, AAC, OGG, etc.)</p>
+                <p className="text-lg font-semibold text-white">
+                  Click to select audio files
+                </p>
+                <p className="text-sm text-gray-400 mt-1">
+                  or drag and drop (MP3, WAV, FLAC, M4A, AAC, OGG, etc.)
+                </p>
               </div>
             </Label>
           </div>
@@ -416,7 +507,10 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
                   </span>
                 )}
               </div>
-              <Progress value={(completedCount / totalCount) * 100} className="h-2" />
+              <Progress
+                value={(completedCount / totalCount) * 100}
+                className="h-2"
+              />
             </div>
           )}
 
@@ -432,16 +526,23 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
                     <div className="flex items-start gap-3 flex-1">
                       {getStatusIcon(track.uploadStatus)}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">{track.file.name}</p>
+                        <p className="font-medium text-white truncate">
+                          {track.file.name}
+                        </p>
                         {track.errorMessage && (
-                          <p className="text-sm text-red-400 mt-1">{track.errorMessage}</p>
+                          <p className="text-sm text-red-400 mt-1">
+                            {track.errorMessage}
+                          </p>
                         )}
-                        {track.duration === 0 && track.uploadStatus === 'pending' && (
-                          <p className="text-sm text-yellow-400 mt-1">⚠ Duration required - please enter manually</p>
-                        )}
+                        {track.duration === 0 &&
+                          track.uploadStatus === "pending" && (
+                            <p className="text-sm text-yellow-400 mt-1">
+                              ⚠ Duration required - please enter manually
+                            </p>
+                          )}
                       </div>
                     </div>
-                    {track.uploadStatus !== 'uploading' && (
+                    {track.uploadStatus !== "uploading" && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -453,17 +554,21 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
                     )}
                   </div>
 
-                  {track.uploadStatus === 'uploading' && (
+                  {track.uploadStatus === "uploading" && (
                     <Progress value={track.uploadProgress} className="h-2" />
                   )}
 
-                  {(track.uploadStatus === 'pending' || track.uploadStatus === 'error' || track.uploadStatus === 'queued') && (
+                  {(track.uploadStatus === "pending" ||
+                    track.uploadStatus === "error" ||
+                    track.uploadStatus === "queued") && (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label className="text-xs text-gray-400">Title</Label>
                         <Input
                           value={track.title}
-                          onChange={(e) => updateTrack(track.id, { title: e.target.value })}
+                          onChange={(e) =>
+                            updateTrack(track.id, { title: e.target.value })
+                          }
                           className="mt-1 bg-black/50 border-neon-cyan/30 text-white"
                           disabled={isUploading}
                         />
@@ -472,32 +577,43 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
                         <Label className="text-xs text-gray-400">Artist</Label>
                         <Input
                           value={track.artist}
-                          onChange={(e) => updateTrack(track.id, { artist: e.target.value })}
-                          className="mt-1 bg-black/50 border-neon-cyan/30 text-white"
-                          disabled={isUploading}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-400">Album (optional)</Label>
-                        <Input
-                          value={track.album}
-                          onChange={(e) => updateTrack(track.id, { album: e.target.value })}
+                          onChange={(e) =>
+                            updateTrack(track.id, { artist: e.target.value })
+                          }
                           className="mt-1 bg-black/50 border-neon-cyan/30 text-white"
                           disabled={isUploading}
                         />
                       </div>
                       <div>
                         <Label className="text-xs text-gray-400">
-                          Duration (mm:ss) {track.duration === 0 && <span className="text-yellow-400">*</span>}
+                          Album (optional)
+                        </Label>
+                        <Input
+                          value={track.album}
+                          onChange={(e) =>
+                            updateTrack(track.id, { album: e.target.value })
+                          }
+                          className="mt-1 bg-black/50 border-neon-cyan/30 text-white"
+                          disabled={isUploading}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-400">
+                          Duration (mm:ss){" "}
+                          {track.duration === 0 && (
+                            <span className="text-yellow-400">*</span>
+                          )}
                         </Label>
                         <Input
                           value={formatDuration(track.duration)}
-                          onChange={(e) => handleDurationChange(track.id, e.target.value)}
+                          onChange={(e) =>
+                            handleDurationChange(track.id, e.target.value)
+                          }
                           placeholder="0:00"
                           className={`mt-1 bg-black/50 text-white ${
-                            track.duration === 0 
-                              ? 'border-yellow-500/50 focus:border-yellow-500' 
-                              : 'border-neon-cyan/30'
+                            track.duration === 0
+                              ? "border-yellow-500/50 focus:border-yellow-500"
+                              : "border-neon-cyan/30"
                           }`}
                           disabled={isUploading}
                         />
@@ -531,11 +647,13 @@ export default function MediaUploadDialog({ open, onOpenChange }: MediaUploadDia
               variant="outline"
               className="border-neon-purple/50 text-white hover:bg-neon-purple/10"
             >
-              {isUploading ? 'Cancel' : 'Close'}
+              {isUploading ? "Cancel" : "Close"}
             </Button>
             <Button
               onClick={handleUploadAll}
-              disabled={isUploading || tracks.length === 0 || !readiness?.canUpload}
+              disabled={
+                isUploading || tracks.length === 0 || !readiness?.canUpload
+              }
               className="bg-gradient-to-r from-neon-cyan to-neon-purple hover:opacity-90"
             >
               {isUploading ? (

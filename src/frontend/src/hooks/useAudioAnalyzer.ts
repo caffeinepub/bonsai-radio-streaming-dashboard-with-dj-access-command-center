@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 interface AudioAnalyzerData {
   volume: number;
@@ -10,7 +10,10 @@ interface AudioAnalyzerData {
   spectralCentroid: number;
 }
 
-export function useAudioAnalyzer(audioElement: HTMLAudioElement | null, isPlaying: boolean) {
+export function useAudioAnalyzer(
+  audioElement: HTMLAudioElement | null,
+  isPlaying: boolean,
+) {
   const [audioData, setAudioData] = useState<AudioAnalyzerData>({
     volume: 0,
     bass: 0,
@@ -35,7 +38,9 @@ export function useAudioAnalyzer(audioElement: HTMLAudioElement | null, isPlayin
     const initAudioContext = () => {
       try {
         if (!audioContextRef.current) {
-          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+          audioContextRef.current = new (
+            window.AudioContext || (window as any).webkitAudioContext
+          )();
           analyzerRef.current = audioContextRef.current.createAnalyser();
           // Enhanced FFT size for better frequency resolution
           analyzerRef.current.fftSize = 2048;
@@ -46,10 +51,11 @@ export function useAudioAnalyzer(audioElement: HTMLAudioElement | null, isPlayin
         // Only create source once
         if (!sourceRef.current && audioContextRef.current) {
           try {
-            sourceRef.current = audioContextRef.current.createMediaElementSource(audioElement);
+            sourceRef.current =
+              audioContextRef.current.createMediaElementSource(audioElement);
             sourceRef.current.connect(analyzerRef.current!);
             analyzerRef.current!.connect(audioContextRef.current.destination);
-          } catch (error) {
+          } catch (_error) {
             // Source already exists, reconnect analyzer
             if (analyzerRef.current && audioContextRef.current) {
               analyzerRef.current.connect(audioContextRef.current.destination);
@@ -57,11 +63,11 @@ export function useAudioAnalyzer(audioElement: HTMLAudioElement | null, isPlayin
           }
         }
 
-        if (audioContextRef.current.state === 'suspended') {
+        if (audioContextRef.current.state === "suspended") {
           audioContextRef.current.resume();
         }
       } catch (error) {
-        console.error('Error initializing audio context:', error);
+        console.error("Error initializing audio context:", error);
       }
     };
 
@@ -70,12 +76,15 @@ export function useAudioAnalyzer(audioElement: HTMLAudioElement | null, isPlayin
 
       // Adaptive throttling based on device and visibility
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      const throttleInterval = 
-        !isPlaying ? 200 :
-        document.hidden ? 100 :
-        isMobile ? 33 : // ~30fps on mobile
-        16; // ~60fps on desktop
-      
+      const throttleInterval = !isPlaying
+        ? 200
+        : document.hidden
+          ? 100
+          : isMobile
+            ? 33
+            : // ~30fps on mobile
+              16; // ~60fps on desktop
+
       if (timestamp - lastUpdateTimeRef.current < throttleInterval) {
         animationFrameRef.current = requestAnimationFrame(analyze);
         return;
@@ -131,23 +140,26 @@ export function useAudioAnalyzer(audioElement: HTMLAudioElement | null, isPlayin
       const high = (highSum / (bufferLength - highMidEnd) + highMid) / 2;
 
       // Calculate spectral centroid (brightness of sound)
-      const spectralCentroid = totalSum > 0 ? weightedFreqSum / (totalSum * bufferLength) : 0;
+      const spectralCentroid =
+        totalSum > 0 ? weightedFreqSum / (totalSum * bufferLength) : 0;
 
       // Detect bass kicks (sudden bass increases)
       bassHistoryRef.current.push(bass);
       if (bassHistoryRef.current.length > 5) {
         bassHistoryRef.current.shift();
       }
-      
-      const avgBass = bassHistoryRef.current.reduce((a, b) => a + b, 0) / bassHistoryRef.current.length;
+
+      const avgBass =
+        bassHistoryRef.current.reduce((a, b) => a + b, 0) /
+        bassHistoryRef.current.length;
       const bassKick = Math.max(0, (bass - avgBass) * 3);
       previousBassRef.current = bass;
 
       setAudioData({
-        volume: Math.pow(volume, 0.8), // Slight compression for better visual range
-        bass: Math.pow(bass, 0.7), // Amplified bass response
-        mid: Math.pow(mid, 0.8),
-        high: Math.pow(high, 0.9),
+        volume: volume ** 0.8, // Slight compression for better visual range
+        bass: bass ** 0.7, // Amplified bass response
+        mid: mid ** 0.8,
+        high: high ** 0.9,
         isActive: volume > 0.005, // Lower threshold for better sensitivity
         bassKick: Math.min(1, bassKick),
         spectralCentroid,
@@ -188,16 +200,16 @@ export function useAudioAnalyzer(audioElement: HTMLAudioElement | null, isPlayin
       }
     };
 
-    audioElement.addEventListener('play', handlePlay);
-    audioElement.addEventListener('pause', handlePause);
-    audioElement.addEventListener('ended', handlePause);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    audioElement.addEventListener("play", handlePlay);
+    audioElement.addEventListener("pause", handlePause);
+    audioElement.addEventListener("ended", handlePause);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      audioElement.removeEventListener('play', handlePlay);
-      audioElement.removeEventListener('pause', handlePause);
-      audioElement.removeEventListener('ended', handlePause);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      audioElement.removeEventListener("play", handlePlay);
+      audioElement.removeEventListener("pause", handlePause);
+      audioElement.removeEventListener("ended", handlePause);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
 
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);

@@ -1,23 +1,31 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { Upload, Trash2, Eye, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  Save,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { ExternalBlob } from "../backend";
+import {
+  useDeleteBackgroundGif,
   useGetBackgroundGifs,
   useGetBackgroundSettings,
-  useUploadBackgroundGif,
-  useDeleteBackgroundGif,
   useUpdateBackgroundSettings,
-} from '../hooks/useQueries';
-import { ExternalBlob } from '../backend';
+  useUploadBackgroundGif,
+} from "../hooks/useQueries";
 
 export default function BackgroundVisualsManager() {
   const { data: gifs = [], isLoading: gifsLoading } = useGetBackgroundGifs();
-  const { data: settings, isLoading: settingsLoading } = useGetBackgroundSettings();
+  const { data: settings, isLoading: settingsLoading } =
+    useGetBackgroundSettings();
   const uploadGif = useUploadBackgroundGif();
   const deleteGif = useDeleteBackgroundGif();
   const updateSettings = useUpdateBackgroundSettings();
@@ -25,11 +33,16 @@ export default function BackgroundVisualsManager() {
   const [transparency, setTransparency] = useState<number>(50);
   const [fadeDuration, setFadeDuration] = useState<number>(2000);
   const [animationIntensity, setAnimationIntensity] = useState<number>(3);
-  const [randomizationEnabled, setRandomizationEnabled] = useState<boolean>(true);
-  const [previewGifUrl, setPreviewGifUrl] = useState<string>('');
+  const [randomizationEnabled, setRandomizationEnabled] =
+    useState<boolean>(true);
+  const [previewGifUrl, setPreviewGifUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadSystemReady, setUploadSystemReady] = useState<boolean | null>(null);
-  const [pendingUploads, setPendingUploads] = useState<Array<{ gifId: string; gifFile: ExternalBlob; fileName: string }>>([]);
+  const [uploadSystemReady, setUploadSystemReady] = useState<boolean | null>(
+    null,
+  );
+  const [pendingUploads, setPendingUploads] = useState<
+    Array<{ gifId: string; gifFile: ExternalBlob; fileName: string }>
+  >([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -60,7 +73,7 @@ export default function BackgroundVisualsManager() {
           setUploadSystemReady(true);
         }
       } catch (error) {
-        console.error('Upload system check failed:', error);
+        console.error("Upload system check failed:", error);
         setUploadSystemReady(false);
       }
     };
@@ -76,14 +89,17 @@ export default function BackgroundVisualsManager() {
       const retryUploads = async () => {
         for (const upload of pendingUploads) {
           try {
-            await uploadGif.mutateAsync({ gifId: upload.gifId, gifFile: upload.gifFile });
+            await uploadGif.mutateAsync({
+              gifId: upload.gifId,
+              gifFile: upload.gifFile,
+            });
             toast.success(`${upload.fileName} uploaded successfully`, {
-              description: 'GIF added to background collection',
+              description: "GIF added to background collection",
             });
           } catch (error) {
-            console.error('Retry upload error:', error);
+            console.error("Retry upload error:", error);
             toast.error(`Failed to upload ${upload.fileName}`, {
-              description: 'Please try again later',
+              description: "Please try again later",
             });
           }
         }
@@ -94,13 +110,15 @@ export default function BackgroundVisualsManager() {
     }
   }, [uploadSystemReady, pendingUploads, uploadGif]);
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
     if (uploadSystemReady === false) {
-      toast.error('Upload system not ready', {
-        description: 'Please wait for the system to initialize',
+      toast.error("Upload system not ready", {
+        description: "Please wait for the system to initialize",
       });
       return;
     }
@@ -112,9 +130,9 @@ export default function BackgroundVisualsManager() {
         const file = files[i];
 
         // Validate file type
-        if (!file.type.startsWith('image/gif')) {
+        if (!file.type.startsWith("image/gif")) {
           toast.error(`${file.name} is not a GIF file`, {
-            description: 'Please upload only .gif files',
+            description: "Please upload only .gif files",
           });
           continue;
         }
@@ -124,9 +142,11 @@ export default function BackgroundVisualsManager() {
         const bytes = new Uint8Array(arrayBuffer);
 
         // Create ExternalBlob with upload progress
-        const blob = ExternalBlob.fromBytes(bytes).withUploadProgress((percentage) => {
-          console.log(`Uploading ${file.name}: ${percentage}%`);
-        });
+        const blob = ExternalBlob.fromBytes(bytes).withUploadProgress(
+          (percentage) => {
+            console.log(`Uploading ${file.name}: ${percentage}%`);
+          },
+        );
 
         // Generate unique ID for GIF
         const gifId = `gif-${Date.now()}-${i}`;
@@ -136,22 +156,25 @@ export default function BackgroundVisualsManager() {
           await uploadGif.mutateAsync({ gifId, gifFile: blob });
 
           toast.success(`${file.name} uploaded successfully`, {
-            description: 'GIF added to background collection',
+            description: "GIF added to background collection",
           });
         } catch (error: any) {
-          console.error('Upload error:', error);
-          
+          console.error("Upload error:", error);
+
           // Check if it's a cashier registration error
-          if (error.message?.includes('Upload system not ready')) {
+          if (error.message?.includes("Upload system not ready")) {
             // Queue for retry
-            setPendingUploads((prev) => [...prev, { gifId, gifFile: blob, fileName: file.name }]);
+            setPendingUploads((prev) => [
+              ...prev,
+              { gifId, gifFile: blob, fileName: file.name },
+            ]);
             setUploadSystemReady(false);
             toast.warning(`${file.name} queued for upload`, {
-              description: 'Will retry when system is ready',
+              description: "Will retry when system is ready",
             });
           } else {
             toast.error(`Failed to upload ${file.name}`, {
-              description: error.message || 'Unknown error',
+              description: error.message || "Unknown error",
             });
           }
         }
@@ -159,7 +182,7 @@ export default function BackgroundVisualsManager() {
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -167,18 +190,20 @@ export default function BackgroundVisualsManager() {
   const handleDeleteGif = async (gifId: string) => {
     try {
       await deleteGif.mutateAsync(gifId);
-      toast.success('GIF removed successfully', {
-        description: 'Background visual deleted',
+      toast.success("GIF removed successfully", {
+        description: "Background visual deleted",
       });
 
       // Update preview if deleted GIF was being previewed
-      if (previewGifUrl === gifs.find((g) => g[0] === gifId)?.[1].getDirectURL()) {
-        setPreviewGifUrl(gifs.length > 1 ? gifs[0][1].getDirectURL() : '');
+      if (
+        previewGifUrl === gifs.find((g) => g[0] === gifId)?.[1].getDirectURL()
+      ) {
+        setPreviewGifUrl(gifs.length > 1 ? gifs[0][1].getDirectURL() : "");
       }
     } catch (error) {
-      console.error('Delete error:', error);
-      toast.error('Failed to delete GIF', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+      console.error("Delete error:", error);
+      toast.error("Failed to delete GIF", {
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -192,13 +217,13 @@ export default function BackgroundVisualsManager() {
         randomizationEnabled,
       });
 
-      toast.success('Settings saved successfully', {
-        description: 'Background visual settings updated',
+      toast.success("Settings saved successfully", {
+        description: "Background visual settings updated",
       });
     } catch (error) {
-      console.error('Save settings error:', error);
-      toast.error('Failed to save settings', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+      console.error("Save settings error:", error);
+      toast.error("Failed to save settings", {
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -206,7 +231,9 @@ export default function BackgroundVisualsManager() {
   if (gifsLoading || settingsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-neon-cyan font-mono text-shimmer">Loading background visuals...</div>
+        <div className="text-neon-cyan font-mono text-shimmer">
+          Loading background visuals...
+        </div>
       </div>
     );
   }
@@ -215,30 +242,35 @@ export default function BackgroundVisualsManager() {
     <div className="space-y-6">
       {/* Upload System Status */}
       {uploadSystemReady !== null && (
-        <div className={`bg-black/40 backdrop-blur-md rounded-xl border p-4 ${
-          uploadSystemReady 
-            ? 'border-green-500/30' 
-            : 'border-yellow-500/30'
-        }`}>
+        <div
+          className={`bg-black/40 backdrop-blur-md rounded-xl border p-4 ${
+            uploadSystemReady ? "border-green-500/30" : "border-yellow-500/30"
+          }`}
+        >
           <div className="flex items-center gap-3">
             {uploadSystemReady ? (
               <>
                 <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
                 <div>
-                  <p className="text-green-400 font-mono font-bold text-glow-pulse">Upload System Ready</p>
-                  <p className="text-sm text-gray-400 text-shimmer">You can now upload background GIFs</p>
+                  <p className="text-green-400 font-mono font-bold text-glow-pulse">
+                    Upload System Ready
+                  </p>
+                  <p className="text-sm text-gray-400 text-shimmer">
+                    You can now upload background GIFs
+                  </p>
                 </div>
               </>
             ) : (
               <>
                 <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 animate-pulse" />
                 <div>
-                  <p className="text-yellow-400 font-mono font-bold text-glow-pulse">Preparing Upload System...</p>
+                  <p className="text-yellow-400 font-mono font-bold text-glow-pulse">
+                    Preparing Upload System...
+                  </p>
                   <p className="text-sm text-gray-400 text-shimmer">
-                    {pendingUploads.length > 0 
+                    {pendingUploads.length > 0
                       ? `${pendingUploads.length} upload(s) queued and will retry automatically`
-                      : 'Please wait while the system initializes'
-                    }
+                      : "Please wait while the system initializes"}
                   </p>
                 </div>
               </>
@@ -270,12 +302,17 @@ export default function BackgroundVisualsManager() {
             >
               <Upload className="w-4 h-4 mr-2" />
               <span className="text-glow-pulse">
-                {isUploading ? 'Uploading...' : uploadSystemReady === false ? 'System Initializing...' : 'Upload GIFs'}
+                {isUploading
+                  ? "Uploading..."
+                  : uploadSystemReady === false
+                    ? "System Initializing..."
+                    : "Upload GIFs"}
               </span>
             </Button>
           </div>
           <p className="text-sm text-gray-400 text-shimmer">
-            Upload .gif files to add to your background visual collection. Multiple files supported.
+            Upload .gif files to add to your background visual collection.
+            Multiple files supported.
           </p>
         </div>
       </div>
@@ -337,10 +374,15 @@ export default function BackgroundVisualsManager() {
           {/* Transparency Slider */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="transparency" className="text-neon-cyan font-mono text-shimmer">
+              <Label
+                htmlFor="transparency"
+                className="text-neon-cyan font-mono text-shimmer"
+              >
                 Transparency
               </Label>
-              <span className="text-neon-purple font-mono font-bold text-glow-pulse">{transparency}%</span>
+              <span className="text-neon-purple font-mono font-bold text-glow-pulse">
+                {transparency}%
+              </span>
             </div>
             <Slider
               id="transparency"
@@ -355,7 +397,10 @@ export default function BackgroundVisualsManager() {
 
           {/* Fade Duration Input */}
           <div className="space-y-3">
-            <Label htmlFor="fadeDuration" className="text-neon-cyan font-mono text-shimmer">
+            <Label
+              htmlFor="fadeDuration"
+              className="text-neon-cyan font-mono text-shimmer"
+            >
               Fade Duration (ms)
             </Label>
             <Input
@@ -373,10 +418,15 @@ export default function BackgroundVisualsManager() {
           {/* Animation Intensity Slider */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="animationIntensity" className="text-neon-cyan font-mono text-shimmer">
+              <Label
+                htmlFor="animationIntensity"
+                className="text-neon-cyan font-mono text-shimmer"
+              >
                 Animation Intensity
               </Label>
-              <span className="text-neon-purple font-mono font-bold text-glow-pulse">{animationIntensity}</span>
+              <span className="text-neon-purple font-mono font-bold text-glow-pulse">
+                {animationIntensity}
+              </span>
             </div>
             <Slider
               id="animationIntensity"
@@ -391,7 +441,10 @@ export default function BackgroundVisualsManager() {
 
           {/* Randomization Toggle */}
           <div className="flex items-center justify-between p-4 rounded-lg bg-black/30 border border-neon-cyan/30">
-            <Label htmlFor="randomization" className="text-neon-cyan font-mono cursor-pointer text-shimmer">
+            <Label
+              htmlFor="randomization"
+              className="text-neon-cyan font-mono cursor-pointer text-shimmer"
+            >
               Enable Random GIF Selection
             </Label>
             <Switch
@@ -410,7 +463,7 @@ export default function BackgroundVisualsManager() {
           >
             <Save className="w-4 h-4 mr-2" />
             <span className="text-glow-pulse">
-              {updateSettings.isPending ? 'Saving...' : 'Save Settings'}
+              {updateSettings.isPending ? "Saving..." : "Save Settings"}
             </span>
           </Button>
         </div>
@@ -422,7 +475,10 @@ export default function BackgroundVisualsManager() {
           <h3 className="text-xl font-bold text-pink-400 font-mono uppercase tracking-wider mb-4 text-glow-shift">
             Live Preview
           </h3>
-          <div className="relative bg-black rounded-lg overflow-hidden" style={{ height: '300px' }}>
+          <div
+            className="relative bg-black rounded-lg overflow-hidden"
+            style={{ height: "300px" }}
+          >
             <div
               className="absolute inset-0"
               style={{
@@ -434,7 +490,7 @@ export default function BackgroundVisualsManager() {
                 alt="Preview"
                 className="w-full h-full object-cover"
                 style={{
-                  mixBlendMode: 'screen',
+                  mixBlendMode: "screen",
                   filter: `brightness(${0.8 + animationIntensity * 0.1}) contrast(${1 + animationIntensity * 0.05})`,
                 }}
               />

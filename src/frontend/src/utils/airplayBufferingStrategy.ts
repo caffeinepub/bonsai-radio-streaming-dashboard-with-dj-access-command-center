@@ -23,19 +23,23 @@ export const DEFAULT_BUFFERING_CONFIG: AirPlayBufferingConfig = {
   maxRecoveryAttempts: 5,
 };
 
-export function getBufferingConfig(isAirPlayConnected: boolean): AirPlayBufferingConfig {
-  return isAirPlayConnected ? AIRPLAY_BUFFERING_CONFIG : DEFAULT_BUFFERING_CONFIG;
+export function getBufferingConfig(
+  isAirPlayConnected: boolean,
+): AirPlayBufferingConfig {
+  return isAirPlayConnected
+    ? AIRPLAY_BUFFERING_CONFIG
+    : DEFAULT_BUFFERING_CONFIG;
 }
 
 export function shouldAttemptRecovery(
   bufferingStartTime: number | null,
-  isAirPlayConnected: boolean
+  isAirPlayConnected: boolean,
 ): boolean {
   if (!bufferingStartTime) return false;
-  
+
   const config = getBufferingConfig(isAirPlayConnected);
   const bufferingDuration = Date.now() - bufferingStartTime;
-  
+
   return bufferingDuration >= config.maxBufferingTime;
 }
 

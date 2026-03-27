@@ -1,12 +1,19 @@
-import { useState } from 'react';
-import { useUpdateTrackMetadata } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Save, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import type { Track } from '../backend';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Save } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Track } from "../backend";
+import { useUpdateTrackMetadata } from "../hooks/useQueries";
 
 interface EditTrackDialogProps {
   track: Track;
@@ -14,21 +21,25 @@ interface EditTrackDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
+export default function EditTrackDialog({
+  track,
+  open,
+  onOpenChange,
+}: EditTrackDialogProps) {
   const [title, setTitle] = useState(track.title);
   const [artist, setArtist] = useState(track.artist);
-  const [album, setAlbum] = useState(track.album || '');
+  const [album, setAlbum] = useState(track.album || "");
   const [duration, setDuration] = useState(Number(track.duration));
   const updateTrackMetadata = useUpdateTrackMetadata();
 
   const handleSave = async () => {
     if (!title.trim() || !artist.trim()) {
-      toast.error('Title and Artist are required');
+      toast.error("Title and Artist are required");
       return;
     }
 
     if (duration <= 0) {
-      toast.error('Duration must be greater than 0');
+      toast.error("Duration must be greater than 0");
       return;
     }
 
@@ -40,11 +51,11 @@ export default function EditTrackDialog({ track, open, onOpenChange }: EditTrack
         album: album.trim() || null,
         duration: BigInt(duration),
       });
-      toast.success('Track metadata updated successfully');
+      toast.success("Track metadata updated successfully");
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error updating track:', error);
-      toast.error(error.message || 'Failed to update track metadata');
+      console.error("Error updating track:", error);
+      toast.error(error.message || "Failed to update track metadata");
     }
   };
 
@@ -108,7 +119,9 @@ export default function EditTrackDialog({ track, open, onOpenChange }: EditTrack
               id="duration"
               type="number"
               value={duration}
-              onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                setDuration(Number.parseInt(e.target.value) || 0)
+              }
               placeholder="Duration in seconds"
               className="bg-black/50 border-neon-cyan/50 text-white placeholder:text-gray-500 focus:border-neon-cyan"
             />

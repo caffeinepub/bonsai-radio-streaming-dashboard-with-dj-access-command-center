@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
 interface AirPlayState {
   isSupported: boolean;
@@ -7,7 +7,9 @@ interface AirPlayState {
   showPicker: () => void;
 }
 
-export function useAirPlay(audioElement: HTMLAudioElement | null): AirPlayState {
+export function useAirPlay(
+  audioElement: HTMLAudioElement | null,
+): AirPlayState {
   const [isSupported, setIsSupported] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -16,7 +18,8 @@ export function useAirPlay(audioElement: HTMLAudioElement | null): AirPlayState 
     if (!audioElement) return;
 
     // Check if AirPlay is supported (Safari only)
-    const supported = typeof audioElement.webkitShowPlaybackTargetPicker === 'function';
+    const supported =
+      typeof audioElement.webkitShowPlaybackTargetPicker === "function";
     setIsSupported(supported);
 
     if (!supported) return;
@@ -26,31 +29,32 @@ export function useAirPlay(audioElement: HTMLAudioElement | null): AirPlayState 
       try {
         const availabilityEvent = event as any;
         // Check the availability property from the event payload
-        const available = availabilityEvent.availability === 'available';
+        const available = availabilityEvent.availability === "available";
         setIsAvailable(available);
       } catch (error) {
-        console.error('Error handling AirPlay availability change:', error);
+        console.error("Error handling AirPlay availability change:", error);
       }
     };
 
     // Handle wireless connection changes
     const handleWirelessChange = () => {
       try {
-        const wireless = audioElement.webkitCurrentPlaybackTargetIsWireless ?? false;
+        const wireless =
+          audioElement.webkitCurrentPlaybackTargetIsWireless ?? false;
         setIsConnected(wireless);
       } catch (error) {
-        console.error('Error handling AirPlay wireless change:', error);
+        console.error("Error handling AirPlay wireless change:", error);
       }
     };
 
     // Add event listeners
     audioElement.addEventListener(
-      'webkitplaybacktargetavailabilitychanged',
-      handleAvailabilityChange
+      "webkitplaybacktargetavailabilitychanged",
+      handleAvailabilityChange,
     );
     audioElement.addEventListener(
-      'webkitcurrentplaybacktargetiswirelesschanged',
-      handleWirelessChange
+      "webkitcurrentplaybacktargetiswirelesschanged",
+      handleWirelessChange,
     );
 
     // Check initial state
@@ -61,22 +65,22 @@ export function useAirPlay(audioElement: HTMLAudioElement | null): AirPlayState 
     // Cleanup
     return () => {
       audioElement.removeEventListener(
-        'webkitplaybacktargetavailabilitychanged',
-        handleAvailabilityChange
+        "webkitplaybacktargetavailabilitychanged",
+        handleAvailabilityChange,
       );
       audioElement.removeEventListener(
-        'webkitcurrentplaybacktargetiswirelesschanged',
-        handleWirelessChange
+        "webkitcurrentplaybacktargetiswirelesschanged",
+        handleWirelessChange,
       );
     };
   }, [audioElement]);
 
   const showPicker = useCallback(() => {
-    if (audioElement && audioElement.webkitShowPlaybackTargetPicker) {
+    if (audioElement?.webkitShowPlaybackTargetPicker) {
       try {
         audioElement.webkitShowPlaybackTargetPicker();
       } catch (error) {
-        console.error('Failed to show AirPlay picker:', error);
+        console.error("Failed to show AirPlay picker:", error);
       }
     }
   }, [audioElement]);

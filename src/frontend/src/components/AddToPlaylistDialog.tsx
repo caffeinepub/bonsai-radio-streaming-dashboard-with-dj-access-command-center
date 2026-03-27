@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useGetPlaylists, useAddTrackToPlaylist, useAddTracksToPlaylist } from '../hooks/useQueries';
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -7,15 +7,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
-import { ListMusic, Loader2 } from 'lucide-react';
-import type { Track } from '../backend';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ListMusic, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Track } from "../backend";
+import {
+  useAddTrackToPlaylist,
+  useAddTracksToPlaylist,
+  useGetPlaylists,
+} from "../hooks/useQueries";
 
 interface AddToPlaylistDialogProps {
   tracks: Track[];
@@ -23,36 +33,47 @@ interface AddToPlaylistDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddToPlaylistDialogProps) {
-  const { data: playlists = [], isLoading: playlistsLoading } = useGetPlaylists();
+export default function AddToPlaylistDialog({
+  tracks,
+  open,
+  onOpenChange,
+}: AddToPlaylistDialogProps) {
+  const { data: playlists = [], isLoading: playlistsLoading } =
+    useGetPlaylists();
   const addTrackToPlaylist = useAddTrackToPlaylist();
   const addTracksToPlaylist = useAddTracksToPlaylist();
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
-  const [mode, setMode] = useState<'single' | 'multiple'>('single');
-  const [singlePlaylist, setSinglePlaylist] = useState<string>('');
+  const [mode, setMode] = useState<"single" | "multiple">("single");
+  const [singlePlaylist, setSinglePlaylist] = useState<string>("");
 
   const isBatchMode = tracks.length > 1;
 
   const handleClose = () => {
     setSelectedPlaylists([]);
-    setSinglePlaylist('');
-    setMode('single');
+    setSinglePlaylist("");
+    setMode("single");
     onOpenChange(false);
   };
 
   const handleTogglePlaylist = (playlistId: string) => {
     setSelectedPlaylists((prev) =>
-      prev.includes(playlistId) ? prev.filter((id) => id !== playlistId) : [...prev, playlistId]
+      prev.includes(playlistId)
+        ? prev.filter((id) => id !== playlistId)
+        : [...prev, playlistId],
     );
   };
 
   const handleAddToPlaylists = async () => {
     if (tracks.length === 0) return;
 
-    const targetPlaylists = mode === 'single' ? [singlePlaylist] : selectedPlaylists;
+    const targetPlaylists =
+      mode === "single" ? [singlePlaylist] : selectedPlaylists;
 
-    if (targetPlaylists.length === 0 || (mode === 'single' && !singlePlaylist)) {
-      toast.error('Please select at least one playlist');
+    if (
+      targetPlaylists.length === 0 ||
+      (mode === "single" && !singlePlaylist)
+    ) {
+      toast.error("Please select at least one playlist");
       return;
     }
 
@@ -62,31 +83,34 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
       if (isBatchMode) {
         // Batch mode: add multiple tracks to playlists
         const promises = targetPlaylists.map((playlistId) =>
-          addTracksToPlaylist.mutateAsync({ playlistId, trackIds })
+          addTracksToPlaylist.mutateAsync({ playlistId, trackIds }),
         );
         await Promise.all(promises);
       } else {
         // Single track mode
         const promises = targetPlaylists.map((playlistId) =>
-          addTrackToPlaylist.mutateAsync({ playlistId, trackId: trackIds[0] })
+          addTrackToPlaylist.mutateAsync({ playlistId, trackId: trackIds[0] }),
         );
         await Promise.all(promises);
       }
 
-      const trackText = isBatchMode ? `${tracks.length} tracks` : `"${tracks[0].title}"`;
+      const trackText = isBatchMode
+        ? `${tracks.length} tracks`
+        : `"${tracks[0].title}"`;
       toast.success(
         `Successfully added ${trackText} to ${targetPlaylists.length} playlist${
-          targetPlaylists.length > 1 ? 's' : ''
-        }`
+          targetPlaylists.length > 1 ? "s" : ""
+        }`,
       );
       handleClose();
     } catch (error: any) {
-      console.error('Error adding tracks to playlist:', error);
-      toast.error(error.message || 'Failed to add tracks to playlist');
+      console.error("Error adding tracks to playlist:", error);
+      toast.error(error.message || "Failed to add tracks to playlist");
     }
   };
 
-  const isPending = addTrackToPlaylist.isPending || addTracksToPlaylist.isPending;
+  const isPending =
+    addTrackToPlaylist.isPending || addTracksToPlaylist.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -99,13 +123,20 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
           <DialogDescription className="text-gray-300">
             {isBatchMode ? (
               <span>
-                Add <span className="text-neon-purple font-semibold">{tracks.length} tracks</span> to your
-                playlists
+                Add{" "}
+                <span className="text-neon-purple font-semibold">
+                  {tracks.length} tracks
+                </span>{" "}
+                to your playlists
               </span>
             ) : tracks.length === 1 ? (
               <span>
-                Add <span className="text-neon-purple font-semibold">"{tracks[0].title}"</span> by{' '}
-                <span className="text-neon-cyan">{tracks[0].artist}</span> to your playlists
+                Add{" "}
+                <span className="text-neon-purple font-semibold">
+                  "{tracks[0].title}"
+                </span>{" "}
+                by <span className="text-neon-cyan">{tracks[0].artist}</span> to
+                your playlists
               </span>
             ) : null}
           </DialogDescription>
@@ -116,12 +147,12 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
           <div className="flex gap-2">
             <Button
               type="button"
-              variant={mode === 'single' ? 'default' : 'outline'}
-              onClick={() => setMode('single')}
+              variant={mode === "single" ? "default" : "outline"}
+              onClick={() => setMode("single")}
               className={
-                mode === 'single'
-                  ? 'bg-neon-cyan/20 border-neon-cyan text-neon-cyan hover:bg-neon-cyan/30'
-                  : 'border-gray-600 text-gray-400 hover:bg-gray-800'
+                mode === "single"
+                  ? "bg-neon-cyan/20 border-neon-cyan text-neon-cyan hover:bg-neon-cyan/30"
+                  : "border-gray-600 text-gray-400 hover:bg-gray-800"
               }
               size="sm"
             >
@@ -129,12 +160,12 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
             </Button>
             <Button
               type="button"
-              variant={mode === 'multiple' ? 'default' : 'outline'}
-              onClick={() => setMode('multiple')}
+              variant={mode === "multiple" ? "default" : "outline"}
+              onClick={() => setMode("multiple")}
               className={
-                mode === 'multiple'
-                  ? 'bg-neon-purple/20 border-neon-purple text-neon-purple hover:bg-neon-purple/30'
-                  : 'border-gray-600 text-gray-400 hover:bg-gray-800'
+                mode === "multiple"
+                  ? "bg-neon-purple/20 border-neon-purple text-neon-purple hover:bg-neon-purple/30"
+                  : "border-gray-600 text-gray-400 hover:bg-gray-800"
               }
               size="sm"
             >
@@ -151,11 +182,16 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
             <div className="text-center py-8 text-gray-400">
               <ListMusic className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>No playlists available</p>
-              <p className="text-sm text-gray-500 mt-1">Create a playlist first</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Create a playlist first
+              </p>
             </div>
-          ) : mode === 'single' ? (
+          ) : mode === "single" ? (
             <div className="space-y-2">
-              <Label htmlFor="playlist-select" className="text-neon-cyan font-mono">
+              <Label
+                htmlFor="playlist-select"
+                className="text-neon-cyan font-mono"
+              >
                 Select Playlist
               </Label>
               <Select value={singlePlaylist} onValueChange={setSinglePlaylist}>
@@ -180,7 +216,9 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
             </div>
           ) : (
             <div className="space-y-2">
-              <Label className="text-neon-cyan font-mono">Select Playlists</Label>
+              <Label className="text-neon-cyan font-mono">
+                Select Playlists
+              </Label>
               <ScrollArea className="h-64 rounded-md border border-neon-purple/30 bg-black/30 p-4">
                 <div className="space-y-3">
                   {playlists.map((playlist) => (
@@ -191,7 +229,9 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
                       <Checkbox
                         id={`playlist-${playlist.id}`}
                         checked={selectedPlaylists.includes(playlist.id)}
-                        onCheckedChange={() => handleTogglePlaylist(playlist.id)}
+                        onCheckedChange={() =>
+                          handleTogglePlaylist(playlist.id)
+                        }
                         className="border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
                       />
                       <Label
@@ -209,7 +249,8 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
               </ScrollArea>
               {selectedPlaylists.length > 0 && (
                 <p className="text-sm text-neon-purple font-mono">
-                  {selectedPlaylists.length} playlist{selectedPlaylists.length > 1 ? 's' : ''} selected
+                  {selectedPlaylists.length} playlist
+                  {selectedPlaylists.length > 1 ? "s" : ""} selected
                 </p>
               )}
             </div>
@@ -231,8 +272,8 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
             onClick={handleAddToPlaylists}
             disabled={
               isPending ||
-              (mode === 'single' && !singlePlaylist) ||
-              (mode === 'multiple' && selectedPlaylists.length === 0)
+              (mode === "single" && !singlePlaylist) ||
+              (mode === "multiple" && selectedPlaylists.length === 0)
             }
             className="bg-gradient-to-r from-neon-cyan to-neon-purple hover:from-neon-cyan/80 hover:to-neon-purple/80 text-white font-bold shadow-lg shadow-neon-cyan/50"
           >
@@ -242,7 +283,7 @@ export default function AddToPlaylistDialog({ tracks, open, onOpenChange }: AddT
                 Adding...
               </>
             ) : (
-              'Add to Playlist'
+              "Add to Playlist"
             )}
           </Button>
         </DialogFooter>

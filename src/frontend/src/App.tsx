@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useInternetIdentity } from './hooks/useInternetIdentity';
-import { useIsCallerAdmin } from './hooks/useQueries';
-import RadioPlayer from './components/RadioPlayer';
-import DJAuthModal from './components/DJAuthModal';
-import DJDashboard from './components/DJDashboard';
-import LoadingScreen from './components/LoadingScreen';
-import { Toaster } from '@/components/ui/sonner';
-import { ThemeProvider } from 'next-themes';
-import { useActor } from './hooks/useActor';
-import { ExternalBlob } from './backend';
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
+import { useEffect, useState } from "react";
+import { ExternalBlob } from "./backend";
+import DJAuthModal from "./components/DJAuthModal";
+import DJDashboard from "./components/DJDashboard";
+import LoadingScreen from "./components/LoadingScreen";
+import RadioPlayer from "./components/RadioPlayer";
+import { useActor } from "./hooks/useActor";
+import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { useIsCallerAdmin } from "./hooks/useQueries";
 
 export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
@@ -29,18 +29,43 @@ export default function App() {
       try {
         // Create default GIF entries from assets
         const defaultGifs: Array<[string, ExternalBlob]> = [
-          ['default-1', ExternalBlob.fromURL('/assets/generated/cyberpunk-geometric-pulse.dim_800x600.gif')],
-          ['default-2', ExternalBlob.fromURL('/assets/generated/data-stream-flow.dim_800x600.gif')],
-          ['default-3', ExternalBlob.fromURL('/assets/generated/neon-circuit-pulse.dim_800x600.gif')],
-          ['default-4', ExternalBlob.fromURL('/assets/generated/holographic-morph.dim_800x600.gif')],
-          ['default-5', ExternalBlob.fromURL('/assets/generated/neural-network-pulse.dim_800x600.gif')],
+          [
+            "default-1",
+            ExternalBlob.fromURL(
+              "/assets/generated/cyberpunk-geometric-pulse.dim_800x600.gif",
+            ),
+          ],
+          [
+            "default-2",
+            ExternalBlob.fromURL(
+              "/assets/generated/data-stream-flow.dim_800x600.gif",
+            ),
+          ],
+          [
+            "default-3",
+            ExternalBlob.fromURL(
+              "/assets/generated/neon-circuit-pulse.dim_800x600.gif",
+            ),
+          ],
+          [
+            "default-4",
+            ExternalBlob.fromURL(
+              "/assets/generated/holographic-morph.dim_800x600.gif",
+            ),
+          ],
+          [
+            "default-5",
+            ExternalBlob.fromURL(
+              "/assets/generated/neural-network-pulse.dim_800x600.gif",
+            ),
+          ],
         ];
 
         await actor.initializeDefaultGifs(defaultGifs);
         setHasInitializedGifs(true);
-        console.log('Default GIFs initialized successfully');
+        console.log("Default GIFs initialized successfully");
       } catch (error) {
-        console.error('Failed to initialize default GIFs:', error);
+        console.error("Failed to initialize default GIFs:", error);
       }
     };
 

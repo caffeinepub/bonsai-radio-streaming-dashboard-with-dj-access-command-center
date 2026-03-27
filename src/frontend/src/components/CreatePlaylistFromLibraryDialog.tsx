@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useGetMediaLibrary, useCreatePlaylistFromLibrary } from '../hooks/useQueries';
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -7,14 +7,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
-import { ListMusic, Loader2, Music, Search } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ListMusic, Loader2, Music, Search } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  useCreatePlaylistFromLibrary,
+  useGetMediaLibrary,
+} from "../hooks/useQueries";
 
 interface CreatePlaylistFromLibraryDialogProps {
   open: boolean;
@@ -27,9 +30,9 @@ export default function CreatePlaylistFromLibraryDialog({
 }: CreatePlaylistFromLibraryDialogProps) {
   const { data: tracks = [], isLoading: tracksLoading } = useGetMediaLibrary();
   const createPlaylist = useCreatePlaylistFromLibrary();
-  const [playlistId, setPlaylistId] = useState('');
+  const [playlistId, setPlaylistId] = useState("");
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredTracks = tracks.filter((track) => {
     if (!searchTerm.trim()) return true;
@@ -42,15 +45,17 @@ export default function CreatePlaylistFromLibraryDialog({
   });
 
   const handleClose = () => {
-    setPlaylistId('');
+    setPlaylistId("");
     setSelectedTracks([]);
-    setSearchTerm('');
+    setSearchTerm("");
     onOpenChange(false);
   };
 
   const handleToggleTrack = (trackId: string) => {
     setSelectedTracks((prev) =>
-      prev.includes(trackId) ? prev.filter((id) => id !== trackId) : [...prev, trackId]
+      prev.includes(trackId)
+        ? prev.filter((id) => id !== trackId)
+        : [...prev, trackId],
     );
   };
 
@@ -64,7 +69,7 @@ export default function CreatePlaylistFromLibraryDialog({
 
   const handleCreatePlaylist = async () => {
     if (!playlistId.trim()) {
-      toast.error('Please enter a playlist ID');
+      toast.error("Please enter a playlist ID");
       return;
     }
 
@@ -77,21 +82,21 @@ export default function CreatePlaylistFromLibraryDialog({
       toast.success(
         selectedTracks.length > 0
           ? `Playlist "${playlistId}" created with ${selectedTracks.length} track${
-              selectedTracks.length > 1 ? 's' : ''
+              selectedTracks.length > 1 ? "s" : ""
             }`
-          : `Empty playlist "${playlistId}" created successfully`
+          : `Empty playlist "${playlistId}" created successfully`,
       );
       handleClose();
     } catch (error: any) {
-      console.error('Error creating playlist:', error);
-      toast.error(error.message || 'Failed to create playlist');
+      console.error("Error creating playlist:", error);
+      toast.error(error.message || "Failed to create playlist");
     }
   };
 
   const formatDuration = (seconds: bigint) => {
     const mins = Math.floor(Number(seconds) / 60);
     const secs = Number(seconds) % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -103,7 +108,8 @@ export default function CreatePlaylistFromLibraryDialog({
             Create Playlist from Library
           </DialogTitle>
           <DialogDescription className="text-gray-300">
-            Create a new playlist and optionally add tracks from your media library
+            Create a new playlist and optionally add tracks from your media
+            library
           </DialogDescription>
         </DialogHeader>
 
@@ -136,7 +142,9 @@ export default function CreatePlaylistFromLibraryDialog({
                   onClick={handleSelectAll}
                   className="text-neon-cyan hover:text-neon-purple hover:bg-neon-cyan/10 h-auto py-1"
                 >
-                  {selectedTracks.length === filteredTracks.length ? 'Deselect All' : 'Select All'}
+                  {selectedTracks.length === filteredTracks.length
+                    ? "Deselect All"
+                    : "Select All"}
                 </Button>
               )}
             </div>
@@ -163,7 +171,9 @@ export default function CreatePlaylistFromLibraryDialog({
               <div className="text-center py-8 text-gray-400 border border-neon-purple/30 rounded-lg bg-black/30">
                 <Music className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No tracks in media library</p>
-                <p className="text-sm text-gray-500 mt-1">You can create an empty playlist</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  You can create an empty playlist
+                </p>
               </div>
             ) : (
               <ScrollArea className="h-64 rounded-md border border-neon-purple/30 bg-black/30 p-4">
@@ -189,7 +199,9 @@ export default function CreatePlaylistFromLibraryDialog({
                           htmlFor={`track-${track.id}`}
                           className="flex-1 cursor-pointer space-y-1"
                         >
-                          <div className="text-white font-medium">{track.title}</div>
+                          <div className="text-white font-medium">
+                            {track.title}
+                          </div>
                           <div className="text-sm text-gray-400">
                             {track.artist}
                             {track.album && ` • ${track.album}`}
@@ -207,7 +219,8 @@ export default function CreatePlaylistFromLibraryDialog({
 
             {selectedTracks.length > 0 && (
               <p className="text-sm text-neon-purple font-mono">
-                {selectedTracks.length} track{selectedTracks.length > 1 ? 's' : ''} selected
+                {selectedTracks.length} track
+                {selectedTracks.length > 1 ? "s" : ""} selected
               </p>
             )}
           </div>
@@ -235,7 +248,7 @@ export default function CreatePlaylistFromLibraryDialog({
                 Creating...
               </>
             ) : (
-              'Create Playlist'
+              "Create Playlist"
             )}
           </Button>
         </DialogFooter>

@@ -4,55 +4,63 @@
 
 // Supported audio file extensions
 const SUPPORTED_AUDIO_EXTENSIONS = [
-  '.mp3',
-  '.wav',
-  '.flac',
-  '.m4a',
-  '.aac',
-  '.ogg',
-  '.opus',
-  '.wma',
-  '.aiff',
-  '.ape',
+  ".mp3",
+  ".wav",
+  ".flac",
+  ".m4a",
+  ".aac",
+  ".ogg",
+  ".opus",
+  ".wma",
+  ".aiff",
+  ".ape",
 ];
 
 // Known audio MIME types
 const AUDIO_MIME_TYPES = [
-  'audio/mpeg',
-  'audio/mp3',
-  'audio/wav',
-  'audio/wave',
-  'audio/x-wav',
-  'audio/flac',
-  'audio/x-flac',
-  'audio/mp4',
-  'audio/x-m4a',
-  'audio/aac',
-  'audio/ogg',
-  'audio/opus',
-  'audio/webm',
-  'audio/x-ms-wma',
-  'audio/aiff',
-  'audio/x-aiff',
-  'audio/ape',
-  'audio/x-ape',
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/wave",
+  "audio/x-wav",
+  "audio/flac",
+  "audio/x-flac",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/aac",
+  "audio/ogg",
+  "audio/opus",
+  "audio/webm",
+  "audio/x-ms-wma",
+  "audio/aiff",
+  "audio/x-aiff",
+  "audio/ape",
+  "audio/x-ape",
 ];
 
 /**
  * Validates if a file is a supported audio file
  * Checks both MIME type and file extension to handle cases where MIME is empty/unknown
  */
-export function isValidAudioFile(file: File): { valid: boolean; reason?: string } {
+export function isValidAudioFile(file: File): {
+  valid: boolean;
+  reason?: string;
+} {
   // Check MIME type if available
   if (file.type) {
-    if (AUDIO_MIME_TYPES.includes(file.type) || file.type.startsWith('audio/')) {
+    if (
+      AUDIO_MIME_TYPES.includes(file.type) ||
+      file.type.startsWith("audio/")
+    ) {
       return { valid: true };
     }
   }
 
   // If MIME type is empty or unknown, check file extension
   const fileName = file.name.toLowerCase();
-  const hasAudioExtension = SUPPORTED_AUDIO_EXTENSIONS.some((ext) => fileName.endsWith(ext));
+  const hasAudioExtension = SUPPORTED_AUDIO_EXTENSIONS.some((ext) =>
+    fileName.endsWith(ext),
+  );
 
   if (hasAudioExtension) {
     return { valid: true };
@@ -78,7 +86,7 @@ export async function extractAudioDuration(file: File): Promise<number | null> {
     await audioContext.close();
     return Math.floor(audioBuffer.duration);
   } catch (error) {
-    console.warn('Web Audio API failed, trying fallback method:', error);
+    console.warn("Web Audio API failed, trying fallback method:", error);
   }
 
   // Method 2: Fallback to HTMLAudioElement (works for more formats)
@@ -88,7 +96,7 @@ export async function extractAudioDuration(file: File): Promise<number | null> {
       return Math.floor(duration);
     }
   } catch (error) {
-    console.warn('HTMLAudioElement fallback failed:', error);
+    console.warn("HTMLAudioElement fallback failed:", error);
   }
 
   // Unable to determine duration
@@ -109,13 +117,13 @@ function extractDurationViaAudioElement(file: File): Promise<number | null> {
       audio.remove();
     };
 
-    audio.addEventListener('loadedmetadata', () => {
+    audio.addEventListener("loadedmetadata", () => {
       const duration = audio.duration;
       cleanup();
-      resolve(duration && isFinite(duration) ? duration : null);
+      resolve(duration && Number.isFinite(duration) ? duration : null);
     });
 
-    audio.addEventListener('error', () => {
+    audio.addEventListener("error", () => {
       cleanup();
       resolve(null);
     });
@@ -134,8 +142,14 @@ function extractDurationViaAudioElement(file: File): Promise<number | null> {
  * Parse duration string in format "mm:ss" or "m:ss" to seconds
  */
 export function parseDurationString(durationStr: string): number {
-  const parts = durationStr.split(':').map((p) => parseInt(p.trim(), 10));
-  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+  const parts = durationStr
+    .split(":")
+    .map((p) => Number.parseInt(p.trim(), 10));
+  if (
+    parts.length === 2 &&
+    !Number.isNaN(parts[0]) &&
+    !Number.isNaN(parts[1])
+  ) {
     return parts[0] * 60 + parts[1];
   }
   return 0;
@@ -147,5 +161,5 @@ export function parseDurationString(durationStr: string): number {
 export function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }

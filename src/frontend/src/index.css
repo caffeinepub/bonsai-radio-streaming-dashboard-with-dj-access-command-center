@@ -38,8 +38,8 @@
     /* Neon Colors */
     --neon-purple: oklch(0.65 0.25 280);
     --neon-cyan: oklch(0.75 0.15 200);
-    --neon-pink: oklch(0.70 0.25 340);
-    --neon-blue: oklch(0.60 0.20 240);
+    --neon-pink: oklch(0.7 0.25 340);
+    --neon-blue: oklch(0.6 0.2 240);
     --neon-magenta: oklch(0.68 0.28 320);
     --neon-violet: oklch(0.62 0.26 300);
   }
@@ -127,7 +127,8 @@
 
 /* Enhanced Audio-Reactive Animations */
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.7;
     filter: brightness(1);
   }
@@ -150,7 +151,8 @@
 }
 
 @keyframes neon-flicker {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     filter: brightness(1);
   }
@@ -163,104 +165,81 @@
 /* Typography Glow Animations */
 @keyframes text-glow-shift {
   0% {
-    text-shadow: 
-      0 0 10px rgba(34, 211, 238, 0.8),
-      0 0 20px rgba(34, 211, 238, 0.6),
-      0 0 30px rgba(34, 211, 238, 0.4);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px
+      rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.4);
     filter: brightness(1);
   }
   33% {
-    text-shadow: 
-      0 0 12px rgba(236, 72, 153, 0.8),
-      0 0 24px rgba(236, 72, 153, 0.6),
-      0 0 36px rgba(236, 72, 153, 0.4);
+    text-shadow: 0 0 12px rgba(236, 72, 153, 0.8), 0 0 24px
+      rgba(236, 72, 153, 0.6), 0 0 36px rgba(236, 72, 153, 0.4);
     filter: brightness(1.1);
   }
   66% {
-    text-shadow: 
-      0 0 11px rgba(168, 85, 247, 0.8),
-      0 0 22px rgba(168, 85, 247, 0.6),
-      0 0 33px rgba(168, 85, 247, 0.4);
+    text-shadow: 0 0 11px rgba(168, 85, 247, 0.8), 0 0 22px
+      rgba(168, 85, 247, 0.6), 0 0 33px rgba(168, 85, 247, 0.4);
     filter: brightness(1.05);
   }
   100% {
-    text-shadow: 
-      0 0 10px rgba(34, 211, 238, 0.8),
-      0 0 20px rgba(34, 211, 238, 0.6),
-      0 0 30px rgba(34, 211, 238, 0.4);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px
+      rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.4);
     filter: brightness(1);
   }
 }
 
 @keyframes text-glow-pulse {
-  0%, 100% {
-    text-shadow: 
-      0 0 8px currentColor,
-      0 0 16px currentColor,
-      0 0 24px currentColor;
+  0%,
+  100% {
+    text-shadow: 0 0 8px currentColor, 0 0 16px currentColor, 0 0 24px
+      currentColor;
     filter: brightness(1);
   }
   50% {
-    text-shadow: 
-      0 0 12px currentColor,
-      0 0 24px currentColor,
-      0 0 36px currentColor;
+    text-shadow: 0 0 12px currentColor, 0 0 24px currentColor, 0 0 36px
+      currentColor;
     filter: brightness(1.2);
   }
 }
 
 @keyframes text-glow-flicker {
-  0%, 100% {
-    text-shadow: 
-      0 0 10px currentColor,
-      0 0 20px currentColor;
+  0%,
+  100% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
     opacity: 1;
   }
   45% {
-    text-shadow: 
-      0 0 10px currentColor,
-      0 0 20px currentColor;
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
     opacity: 1;
   }
   50% {
-    text-shadow: 
-      0 0 6px currentColor,
-      0 0 12px currentColor;
+    text-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
     opacity: 0.92;
   }
   55% {
-    text-shadow: 
-      0 0 12px currentColor,
-      0 0 24px currentColor;
+    text-shadow: 0 0 12px currentColor, 0 0 24px currentColor;
     opacity: 1;
   }
 }
 
 @keyframes text-shimmer {
   0% {
-    text-shadow: 
-      0 0 10px rgba(34, 211, 238, 0.7),
-      0 0 20px rgba(34, 211, 238, 0.5);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.7), 0 0 20px
+      rgba(34, 211, 238, 0.5);
   }
   25% {
-    text-shadow: 
-      0 0 12px rgba(168, 85, 247, 0.7),
-      0 0 24px rgba(168, 85, 247, 0.5);
+    text-shadow: 0 0 12px rgba(168, 85, 247, 0.7), 0 0 24px
+      rgba(168, 85, 247, 0.5);
   }
   50% {
-    text-shadow: 
-      0 0 11px rgba(236, 72, 153, 0.7),
-      0 0 22px rgba(236, 72, 153, 0.5);
+    text-shadow: 0 0 11px rgba(236, 72, 153, 0.7), 0 0 22px
+      rgba(236, 72, 153, 0.5);
   }
   75% {
-    text-shadow: 
-      0 0 12px rgba(168, 85, 247, 0.7),
-      0 0 24px rgba(168, 85, 247, 0.5);
+    text-shadow: 0 0 12px rgba(168, 85, 247, 0.7), 0 0 24px
+      rgba(168, 85, 247, 0.5);
   }
   100% {
-    text-shadow: 
-      0 0 10px rgba(34, 211, 238, 0.7),
-      0 0 20px rgba(34, 211, 238, 0.5);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.7), 0 0 20px
+      rgba(34, 211, 238, 0.5);
   }
 }
 
@@ -291,10 +270,8 @@
 
 /* Static text glow (no animation) */
 .text-glow-static {
-  text-shadow: 
-    0 0 10px currentColor,
-    0 0 20px currentColor,
-    0 0 30px currentColor;
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px
+    currentColor;
 }
 
 /* Audio-reactive text glow (applied via inline styles) */
@@ -346,7 +323,8 @@
 
 /* Transition Pulse Effect */
 @keyframes transition-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -422,7 +400,9 @@
 
 /* Touch-friendly interactions */
 @media (hover: none) and (pointer: coarse) {
-  button, a, [role="button"] {
+  button,
+  a,
+  [role="button"] {
     -webkit-tap-highlight-color: rgba(168, 85, 247, 0.3);
   }
 }
@@ -434,11 +414,11 @@
   .audio-reactive-pulse {
     animation-duration: 2s;
   }
-  
+
   .text-glow-shift {
     animation-duration: 5s;
   }
-  
+
   .text-shimmer {
     animation-duration: 4.5s;
   }

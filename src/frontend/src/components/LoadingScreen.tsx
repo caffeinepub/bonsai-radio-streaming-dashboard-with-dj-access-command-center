@@ -14,11 +14,22 @@ export default function LoadingScreen() {
             className="w-32 h-32 animate-pulse"
           />
           <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-neon-purple animate-pulse" style={{ animationDelay: '0ms' }} />
-            <div className="w-3 h-3 rounded-full bg-neon-cyan animate-pulse" style={{ animationDelay: '150ms' }} />
-            <div className="w-3 h-3 rounded-full bg-neon-blue animate-pulse" style={{ animationDelay: '300ms' }} />
+            <div
+              className="w-3 h-3 rounded-full bg-neon-purple animate-pulse"
+              style={{ animationDelay: "0ms" }}
+            />
+            <div
+              className="w-3 h-3 rounded-full bg-neon-cyan animate-pulse"
+              style={{ animationDelay: "150ms" }}
+            />
+            <div
+              className="w-3 h-3 rounded-full bg-neon-blue animate-pulse"
+              style={{ animationDelay: "300ms" }}
+            />
           </div>
-          <p className="text-neon-cyan font-mono text-sm tracking-wider animate-pulse">INITIALIZING NEURAL STREAM</p>
+          <p className="text-neon-cyan font-mono text-sm tracking-wider animate-pulse">
+            INITIALIZING NEURAL STREAM
+          </p>
         </div>
       </div>
     </div>

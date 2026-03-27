@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { useUpdateTracksMetadata } from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Save, Loader2, Edit3 } from 'lucide-react';
-import { toast } from 'sonner';
-import type { Track, TrackUpdate } from '../backend';
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Edit3, Loader2, Save } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { Track, TrackUpdate } from "../backend";
+import { useUpdateTracksMetadata } from "../hooks/useQueries";
 
 interface BatchEditTrackDialogProps {
   tracks: Track[];
@@ -23,11 +23,15 @@ interface BatchEditTrackDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: BatchEditTrackDialogProps) {
-  const [title, setTitle] = useState('');
-  const [artist, setArtist] = useState('');
-  const [album, setAlbum] = useState('');
-  const [duration, setDuration] = useState('');
+export default function BatchEditTrackDialog({
+  tracks,
+  open,
+  onOpenChange,
+}: BatchEditTrackDialogProps) {
+  const [title, setTitle] = useState("");
+  const [artist, setArtist] = useState("");
+  const [album, setAlbum] = useState("");
+  const [duration, setDuration] = useState("");
 
   const [applyTitle, setApplyTitle] = useState(false);
   const [applyArtist, setApplyArtist] = useState(false);
@@ -37,10 +41,10 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
   const updateTracksMetadata = useUpdateTracksMetadata();
 
   const handleClose = () => {
-    setTitle('');
-    setArtist('');
-    setAlbum('');
-    setDuration('');
+    setTitle("");
+    setArtist("");
+    setAlbum("");
+    setDuration("");
     setApplyTitle(false);
     setApplyArtist(false);
     setApplyAlbum(false);
@@ -50,22 +54,22 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
 
   const handleSave = async () => {
     if (!applyTitle && !applyArtist && !applyAlbum && !applyDuration) {
-      toast.error('Please select at least one field to update');
+      toast.error("Please select at least one field to update");
       return;
     }
 
     if (applyTitle && !title.trim()) {
-      toast.error('Title cannot be empty when applying');
+      toast.error("Title cannot be empty when applying");
       return;
     }
 
     if (applyArtist && !artist.trim()) {
-      toast.error('Artist cannot be empty when applying');
+      toast.error("Artist cannot be empty when applying");
       return;
     }
 
-    if (applyDuration && (!duration || parseInt(duration) <= 0)) {
-      toast.error('Duration must be greater than 0 when applying');
+    if (applyDuration && (!duration || Number.parseInt(duration) <= 0)) {
+      toast.error("Duration must be greater than 0 when applying");
       return;
     }
 
@@ -74,18 +78,24 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
         const update: TrackUpdate = {
           title: applyTitle ? title.trim() : track.title,
           artist: applyArtist ? artist.trim() : track.artist,
-          album: applyAlbum ? (album.trim() || undefined) : (track.album || undefined),
-          duration: applyDuration ? BigInt(parseInt(duration)) : track.duration,
+          album: applyAlbum
+            ? album.trim() || undefined
+            : track.album || undefined,
+          duration: applyDuration
+            ? BigInt(Number.parseInt(duration))
+            : track.duration,
         };
         return [track.id, update];
       });
 
       await updateTracksMetadata.mutateAsync(batch);
-      toast.success(`Successfully updated ${tracks.length} track${tracks.length > 1 ? 's' : ''}`);
+      toast.success(
+        `Successfully updated ${tracks.length} track${tracks.length > 1 ? "s" : ""}`,
+      );
       handleClose();
     } catch (error: any) {
-      console.error('Error updating tracks:', error);
-      toast.error(error.message || 'Failed to update tracks metadata');
+      console.error("Error updating tracks:", error);
+      toast.error(error.message || "Failed to update tracks metadata");
     }
   };
 
@@ -98,19 +108,27 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
             Batch Edit Metadata
           </DialogTitle>
           <DialogDescription className="text-gray-300">
-            Update metadata for <span className="text-neon-purple font-semibold">{tracks.length} tracks</span>.
-            Select which fields to apply to all selected tracks.
+            Update metadata for{" "}
+            <span className="text-neon-purple font-semibold">
+              {tracks.length} tracks
+            </span>
+            . Select which fields to apply to all selected tracks.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Selected Tracks Preview */}
           <div className="space-y-2">
-            <Label className="text-neon-purple font-mono">Selected Tracks</Label>
+            <Label className="text-neon-purple font-mono">
+              Selected Tracks
+            </Label>
             <ScrollArea className="h-32 rounded-md border border-neon-purple/30 bg-black/30 p-3">
               <div className="space-y-1">
                 {tracks.map((track, idx) => (
-                  <div key={track.id} className="text-sm text-gray-300 font-mono">
+                  <div
+                    key={track.id}
+                    className="text-sm text-gray-300 font-mono"
+                  >
                     {idx + 1}. {track.title} - {track.artist}
                   </div>
                 ))}
@@ -129,9 +147,16 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
                 className="mt-2 border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
               />
               <div className="flex-1 space-y-2">
-                <Label htmlFor="title" className="text-neon-purple font-mono flex items-center gap-2">
+                <Label
+                  htmlFor="title"
+                  className="text-neon-purple font-mono flex items-center gap-2"
+                >
                   Title
-                  {applyTitle && <span className="text-xs text-neon-cyan">(will be applied)</span>}
+                  {applyTitle && (
+                    <span className="text-xs text-neon-cyan">
+                      (will be applied)
+                    </span>
+                  )}
                 </Label>
                 <Input
                   id="title"
@@ -149,13 +174,22 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
               <Checkbox
                 id="apply-artist"
                 checked={applyArtist}
-                onCheckedChange={(checked) => setApplyArtist(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setApplyArtist(checked as boolean)
+                }
                 className="mt-2 border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
               />
               <div className="flex-1 space-y-2">
-                <Label htmlFor="artist" className="text-neon-purple font-mono flex items-center gap-2">
+                <Label
+                  htmlFor="artist"
+                  className="text-neon-purple font-mono flex items-center gap-2"
+                >
                   Artist
-                  {applyArtist && <span className="text-xs text-neon-cyan">(will be applied)</span>}
+                  {applyArtist && (
+                    <span className="text-xs text-neon-cyan">
+                      (will be applied)
+                    </span>
+                  )}
                 </Label>
                 <Input
                   id="artist"
@@ -177,9 +211,16 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
                 className="mt-2 border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
               />
               <div className="flex-1 space-y-2">
-                <Label htmlFor="album" className="text-neon-purple font-mono flex items-center gap-2">
+                <Label
+                  htmlFor="album"
+                  className="text-neon-purple font-mono flex items-center gap-2"
+                >
                   Album
-                  {applyAlbum && <span className="text-xs text-neon-cyan">(will be applied)</span>}
+                  {applyAlbum && (
+                    <span className="text-xs text-neon-cyan">
+                      (will be applied)
+                    </span>
+                  )}
                 </Label>
                 <Input
                   id="album"
@@ -197,13 +238,22 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
               <Checkbox
                 id="apply-duration"
                 checked={applyDuration}
-                onCheckedChange={(checked) => setApplyDuration(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setApplyDuration(checked as boolean)
+                }
                 className="mt-2 border-neon-cyan data-[state=checked]:bg-neon-cyan data-[state=checked]:border-neon-cyan"
               />
               <div className="flex-1 space-y-2">
-                <Label htmlFor="duration" className="text-neon-purple font-mono flex items-center gap-2">
+                <Label
+                  htmlFor="duration"
+                  className="text-neon-purple font-mono flex items-center gap-2"
+                >
                   Duration (seconds)
-                  {applyDuration && <span className="text-xs text-neon-cyan">(will be applied)</span>}
+                  {applyDuration && (
+                    <span className="text-xs text-neon-cyan">
+                      (will be applied)
+                    </span>
+                  )}
                 </Label>
                 <Input
                   id="duration"
@@ -241,7 +291,7 @@ export default function BatchEditTrackDialog({ tracks, open, onOpenChange }: Bat
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Update {tracks.length} Track{tracks.length > 1 ? 's' : ''}
+                Update {tracks.length} Track{tracks.length > 1 ? "s" : ""}
               </>
             )}
           </Button>

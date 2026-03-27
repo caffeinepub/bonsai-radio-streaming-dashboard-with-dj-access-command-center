@@ -1,17 +1,23 @@
-import { useEffect, useState, useRef } from 'react';
-import { useGetBackgroundGifs, useGetBackgroundSettings } from '../hooks/useQueries';
+import { useEffect, useRef, useState } from "react";
+import {
+  useGetBackgroundGifs,
+  useGetBackgroundSettings,
+} from "../hooks/useQueries";
 
 interface BackgroundGifOverlayProps {
   currentTrackTitle?: string;
   isPlaying: boolean;
 }
 
-export default function BackgroundGifOverlay({ currentTrackTitle, isPlaying }: BackgroundGifOverlayProps) {
+export default function BackgroundGifOverlay({
+  currentTrackTitle,
+  isPlaying,
+}: BackgroundGifOverlayProps) {
   const { data: gifs = [] } = useGetBackgroundGifs();
   const { data: settings } = useGetBackgroundSettings();
-  const [currentGifUrl, setCurrentGifUrl] = useState<string>('');
+  const [currentGifUrl, setCurrentGifUrl] = useState<string>("");
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const previousTrackRef = useRef<string>('');
+  const previousTrackRef = useRef<string>("");
 
   // Select random GIF when track changes
   useEffect(() => {
@@ -36,10 +42,13 @@ export default function BackgroundGifOverlay({ currentTrackTitle, isPlaying }: B
       const selectedGif = gifs[randomIndex];
 
       // Wait for fade out, then change GIF and fade in
-      setTimeout(() => {
-        setCurrentGifUrl(selectedGif[1].getDirectURL());
-        setIsTransitioning(false);
-      }, settings?.fadeDuration ? Number(settings.fadeDuration) / 2 : 1000);
+      setTimeout(
+        () => {
+          setCurrentGifUrl(selectedGif[1].getDirectURL());
+          setIsTransitioning(false);
+        },
+        settings?.fadeDuration ? Number(settings.fadeDuration) / 2 : 1000,
+      );
     }
   }, [currentTrackTitle, isPlaying, gifs, settings]);
 
@@ -54,9 +63,15 @@ export default function BackgroundGifOverlay({ currentTrackTitle, isPlaying }: B
     return null;
   }
 
-  const transparency = settings?.transparency ? Number(settings.transparency) / 100 : 0.5;
-  const fadeDuration = settings?.fadeDuration ? Number(settings.fadeDuration) : 2000;
-  const animationIntensity = settings?.animationIntensity ? Number(settings.animationIntensity) : 3;
+  const transparency = settings?.transparency
+    ? Number(settings.transparency) / 100
+    : 0.5;
+  const fadeDuration = settings?.fadeDuration
+    ? Number(settings.fadeDuration)
+    : 2000;
+  const animationIntensity = settings?.animationIntensity
+    ? Number(settings.animationIntensity)
+    : 3;
 
   return (
     <div
@@ -71,7 +86,7 @@ export default function BackgroundGifOverlay({ currentTrackTitle, isPlaying }: B
         alt="Background visual"
         className="w-full h-full object-cover"
         style={{
-          mixBlendMode: 'screen',
+          mixBlendMode: "screen",
           filter: `brightness(${0.8 + animationIntensity * 0.1}) contrast(${1 + animationIntensity * 0.05})`,
         }}
       />
